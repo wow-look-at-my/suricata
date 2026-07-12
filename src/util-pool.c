@@ -52,7 +52,7 @@
 static bool PoolDataPreAllocated(Pool *p, void *data)
 {
     ptrdiff_t delta = data - p->data_buffer;
-    return delta >= 0 && delta <= p->data_buffer_size;
+    return delta >= 0 && delta < p->data_buffer_size;
 }
 
 static bool PoolInitData(const Pool *p, void *data)
