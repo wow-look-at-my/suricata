@@ -39,6 +39,8 @@ typedef struct DetectReference_ {
      */
     uint16_t key_len;
     uint16_t reference_len;
+    /* true if key is borrowed from the reference config and not owned */
+    bool key_borrowed;
     /* next reference in the signature */
     struct DetectReference_ *next;
 } DetectReference;
