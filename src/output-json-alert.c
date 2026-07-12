@@ -620,14 +620,28 @@ static int AlertJsonStreamDataCallback(
  *  \retval true stream data logged
  *  \retval false stream data not logged
  */
+/** \brief get the thread's payload staging buffer, allocating it on first use */
+static MemBuffer *AlertJsonGetPayloadBuffer(
+        const AlertJsonOutputCtx *json_output_ctx, JsonAlertLogThread *aft)
+{
+    if (aft->payload_buffer == NULL) {
+        aft->payload_buffer = MemBufferCreateNew(json_output_ctx->payload_buffer_size);
+    }
+    return aft->payload_buffer;
+}
+
 static bool AlertJsonStreamData(const AlertJsonOutputCtx *json_output_ctx, JsonAlertLogThread *aft,
         Flow *f, const Packet *p, SCJsonBuilder *jb)
 {
     TcpSession *ssn = f->protoctx;
     TcpStream *stream = (PKT_IS_TOSERVER(p)) ? &ssn->client : &ssn->server;
 
-    MemBufferReset(aft->payload_buffer);
-    struct AlertJsonStreamDataCallbackData cbd = { .payload = aft->payload_buffer,
+    MemBuffer *payload_buffer = AlertJsonGetPayloadBuffer(json_output_ctx, aft);
+    if (unlikely(payload_buffer == NULL))
+        return false;
+
+    MemBufferReset(payload_buffer);
+    struct AlertJsonStreamDataCallbackData cbd = { .payload = payload_buffer,
         .last_re = STREAM_BASE_OFFSET(stream) };
     uint64_t unused = 0;
     StreamReassembleLog(ssn, stream, AlertJsonStreamDataCallback, &cbd, STREAM_BASE_OFFSET(stream),
@@ -827,7 +841,10 @@ static int AlertJson(ThreadVars *tv, JsonAlertLogThread *aft, const Packet *p)
         }
 
         if (pa->flags & PACKET_ALERT_FLAG_FRAME) {
-            AlertAddFrame(p, pa->frame_id, jb, aft->payload_buffer);
+            MemBuffer *payload_buffer = AlertJsonGetPayloadBuffer(json_output_ctx, aft);
+            if (payload_buffer != NULL) {
+                AlertAddFrame(p, pa->frame_id, jb, payload_buffer);
+            }
         }
 
         /* base64-encoded full packet */
@@ -940,10 +957,8 @@ static TmEcode JsonAlertLogThreadInit(ThreadVars *t, const void *initdata, void 
     /** Use the Output Context (file pointer and mutex) */
     AlertJsonOutputCtx *json_output_ctx = ((OutputCtx *)initdata)->data;
 
-    aft->payload_buffer = MemBufferCreateNew(json_output_ctx->payload_buffer_size);
-    if (aft->payload_buffer == NULL) {
-        goto error_exit;
-    }
+    /* aft->payload_buffer is allocated lazily on the first alert that
+     * needs it, see AlertJsonGetPayloadBuffer() */
     aft->ctx = CreateEveThreadCtx(t, json_output_ctx->eve_ctx);
     if (!aft->ctx) {
         goto error_exit;
@@ -955,9 +970,6 @@ static TmEcode JsonAlertLogThreadInit(ThreadVars *t, const void *initdata, void 
     return TM_ECODE_OK;
 
 error_exit:
-    if (aft->payload_buffer != NULL) {
-        MemBufferFree(aft->payload_buffer);
-    }
     SCFree(aft);
     return TM_ECODE_FAILED;
 }
