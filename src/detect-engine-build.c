@@ -2335,6 +2335,9 @@ int SigGroupBuild(DetectEngineCtx *de_ctx)
     if (r != 0) {
         FatalError("initializing the detection engine failed");
     }
+    /* all mpm stores are set up now, so the sid arrays that are only
+     * used to dedup the stores during setup can be freed */
+    MpmStoreFreeSidArrays(de_ctx);
 
     if (SigMatchPrepare(de_ctx) != 0) {
         FatalError("initializing the detection engine failed");
