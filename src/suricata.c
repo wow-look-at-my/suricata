@@ -3166,6 +3166,14 @@ void SuricataInit(void)
 
     PreRunPostPrivsDropInit(suricata.run_mode);
 
+    if (suricata.run_mode != RUNMODE_UNIX_SOCKET) {
+        /* all outputs are set up now, so it is known whether any of them
+         * needs the original rule text at runtime. In unix socket mode
+         * outputs are set up per run, after the engine, so the rule text
+         * is always kept there. */
+        DetectEngineEnableSigStrFree();
+    }
+
     SCOnLoggingReady();
 
     LandlockSandboxing(&suricata);

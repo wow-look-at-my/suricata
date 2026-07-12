@@ -1087,6 +1087,9 @@ static void JsonAlertLogSetupMetadata(AlertJsonOutputCtx *json_output_ctx, SCCon
     if (flags & LOG_JSON_RULE_METADATA) {
         DetectEngineSetParseMetadata();
     }
+    if (flags & LOG_JSON_RULE) {
+        DetectEngineSetKeepSigStr();
+    }
 
     json_output_ctx->payload_buffer_size = payload_buffer_size;
     json_output_ctx->flags |= flags;

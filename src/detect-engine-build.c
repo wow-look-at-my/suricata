@@ -2371,6 +2371,15 @@ int SigGroupBuild(DetectEngineCtx *de_ctx)
     if (EngineModeIsFirewall()) {
         FirewallAnalyzer(de_ctx);
     }
+
+    if (DetectEngineCanFreeSigStr()) {
+        /* after the engine is built the original rule text is only
+         * needed at runtime if an eve alert output logs rule.raw */
+        for (s = de_ctx->sig_list; s != NULL; s = s->next) {
+            SCFree(s->sig_str);
+            s->sig_str = NULL;
+        }
+    }
     return 0;
 }
 

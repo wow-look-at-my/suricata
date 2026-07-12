@@ -5255,6 +5255,27 @@ int DetectEngineMustParseMetadata(void)
     return g_parse_metadata;
 }
 
+/** set by an output that needs the original rule text at runtime */
+static int g_keep_sig_str = 0;
+/** set once all outputs are initialized before the engine is set up, so
+ *  it is known whether any output registered a need for the rule text */
+static int g_sig_str_free_enabled = 0;
+
+void DetectEngineSetKeepSigStr(void)
+{
+    g_keep_sig_str = 1;
+}
+
+void DetectEngineEnableSigStrFree(void)
+{
+    g_sig_str_free_enabled = 1;
+}
+
+int DetectEngineCanFreeSigStr(void)
+{
+    return g_sig_str_free_enabled && !g_keep_sig_str;
+}
+
 const char *DetectSigmatchListEnumToString(enum DetectSigmatchListEnum type)
 {
     switch (type) {
