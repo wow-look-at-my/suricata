@@ -176,7 +176,10 @@ Pool *PoolInit(const uint32_t size, const uint32_t prealloc_size, const uint32_t
             }
 
             pb->data = (char *)p->data_buffer + i * elt_size;
-            if (PoolInitData(p, pb->data) == false) {
+            /* data_buffer is freshly calloc'd, so a memset fallback for a
+             * NULL Init would only redundantly zero it again, committing
+             * all its pages */
+            if (p->Init != NULL && p->Init(pb->data) != 1) {
                 pb->data = NULL;
                 sc_errno = SC_EINVAL;
                 goto error;
