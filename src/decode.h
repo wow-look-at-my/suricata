@@ -567,6 +567,9 @@ typedef struct Packet_
      * hash size still */
     uint32_t flow_hash;
 
+    /** tenant id for this packet, if any. If 0 then no tenant was assigned. */
+    uint32_t tenant_id;
+
     SCTime_t ts;
 
     union {
@@ -634,6 +637,9 @@ typedef struct Packet_
     /* Outgoing interface (bridge modes) */
     uint16_t livedev_dst_id;
 
+    /** data linktype in host order */
+    int datalink;
+
     PacketAlerts alerts;
 
     struct Host_ *host_src;
@@ -648,8 +654,22 @@ typedef struct Packet_
     struct Packet_ *next;
     struct Packet_ *prev;
 
-    /** data linktype in host order */
-    int datalink;
+    /* tunnel/encapsulation handling */
+    struct Packet_ *root; /* in case of tunnel this is a ptr
+                           * to the 'real' packet, the one we
+                           * need to set the verdict on --
+                           * It should always point to the lowest
+                           * packet in a encapsulated packet */
+
+    /* The Packet pool from which this packet was allocated. Used when returning
+     * the packet to its owner's stack. If NULL, then allocated with malloc.
+     */
+    struct PktPool_ *pool;
+
+    /* ready to set verdict counter, only set in root */
+    uint16_t tunnel_rtv_cnt;
+    /* tunnel packet ref count */
+    uint16_t tunnel_tpr_cnt;
 
     /* count decoded layers of packet : too many layers
      * cause issues with performance and stability (stack exhaustion)
@@ -661,26 +681,6 @@ typedef struct Packet_
 
     /** has verdict on this tunneled packet been issued? */
     bool tunnel_verdicted;
-
-    /* tunnel/encapsulation handling */
-    struct Packet_ *root; /* in case of tunnel this is a ptr
-                           * to the 'real' packet, the one we
-                           * need to set the verdict on --
-                           * It should always point to the lowest
-                           * packet in a encapsulated packet */
-
-    /* ready to set verdict counter, only set in root */
-    uint16_t tunnel_rtv_cnt;
-    /* tunnel packet ref count */
-    uint16_t tunnel_tpr_cnt;
-
-    /** tenant id for this packet, if any. If 0 then no tenant was assigned. */
-    uint32_t tenant_id;
-
-    /* The Packet pool from which this packet was allocated. Used when returning
-     * the packet to its owner's stack. If NULL, then allocated with malloc.
-     */
-    struct PktPool_ *pool;
 
 #ifdef PROFILING
     PktProfiling *profile;
