@@ -1023,6 +1023,13 @@ void OutputJsonBuilderBuffer(
 {
     LogFileCtx *file_ctx = ctx->file_ctx;
     MemBuffer **buffer = &ctx->buffer;
+    if (*buffer == NULL) {
+        /* buffer creation is deferred to the first logged record, so
+         * loggers that never emit a record don't allocate at all */
+        *buffer = MemBufferCreateNew(JSON_OUTPUT_BUFFER_SIZE);
+        if (unlikely(*buffer == NULL))
+            return;
+    }
     if (file_ctx->sensor_name) {
         SCJbSetString(js, "host", file_ctx->sensor_name);
     }
