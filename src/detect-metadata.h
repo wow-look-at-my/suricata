@@ -45,5 +45,7 @@ typedef struct DetectMetadataHead {
 void DetectMetadataRegister (void);
 
 void DetectMetadataFree(DetectMetadata *mdata);
+struct Signature_;
+void DetectMetadataListFree(struct Signature_ *s);
 
 #endif /* SURICATA_DETECT_METADATA_H */

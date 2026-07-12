@@ -33,6 +33,7 @@
 #include "detect-engine-threshold.h"
 
 #include "detect-dsize.h"
+#include "detect-metadata.h"
 #include "detect-tcp-flags.h"
 #include "detect-flow.h"
 #include "detect-config.h"
@@ -2277,6 +2278,10 @@ static int SigMatchPrepare(DetectEngineCtx *de_ctx)
         SCFree(s->init_data->rule_state_flowbits_ids_array);
         SCFree(s->init_data);
         s->init_data = NULL;
+
+        /* the metadata list was only needed to build the preformatted
+         * json string, which is what the alert logging uses */
+        DetectMetadataListFree(s);
     }
 
     DumpPatterns(de_ctx);
@@ -2342,6 +2347,9 @@ int SigGroupBuild(DetectEngineCtx *de_ctx)
     if (SigMatchPrepare(de_ctx) != 0) {
         FatalError("initializing the detection engine failed");
     }
+    /* the metadata lists of all signatures are gone now, so the string
+     * dedup table they pointed into can be freed as well */
+    DetectMetadataHashFree(de_ctx);
 
 #ifdef PROFILING
     SCProfilingKeywordInitCounters(de_ctx);
