@@ -22,7 +22,11 @@ jobs:
   audit:
     name: Cargo Audit
     runs-on: ubuntu-latest
-    container: almalinux:9
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Cache cargo registry
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -30,49 +34,12 @@ jobs:
           path: ~/.cargo
           key: ${{ github.job }}-cargo
 
-      - name: Install system packages
-        run: |
-          dnf -y install dnf-plugins-core epel-release
-          dnf config-manager --set-enabled crb
-          dnf -y install \
-                autoconf \
-                automake \
-                cbindgen \
-                diffutils \
-                numactl-devel \
-                dpdk-devel \
-                file-devel \
-                gcc \
-                gcc-c++ \
-                git \
-                jansson-devel \
-                jq \
-                libtool \
-                libyaml-devel \
-                libnfnetlink-devel \
-                libnetfilter_queue-devel \
-                libnet-devel \
-                libcap-ng-devel \
-                libevent-devel \
-                libmaxminddb-devel \
-                libpcap-devel \
-                libtool \
-                lz4-devel \
-                make \
-                pcre2-devel \
-                pkgconfig \
-                python3-devel \
-                python3-sphinx \
-                python3-yaml \
-                sudo \
-                which \
-                zlib-devel
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-      - name: Install Cargo Audit
-        run: cargo install cargo-audit
+      - name: Use prebuilt cargo-audit from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - name: Configure Suricata
         run: |
@@ -102,7 +69,11 @@ jobs:
   update:
     name: Cargo Update
     runs-on: ubuntu-latest
-    container: almalinux:9
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Cache cargo registry
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -110,43 +81,6 @@ jobs:
           path: ~/.cargo
           key: ${{ github.job }}-cargo
 
-      - name: Install system packages
-        run: |
-          dnf -y install dnf-plugins-core epel-release
-          dnf config-manager --set-enabled crb
-          dnf -y install \
-                autoconf \
-                automake \
-                cbindgen \
-                diffutils \
-                numactl-devel \
-                dpdk-devel \
-                file-devel \
-                gcc \
-                gcc-c++ \
-                git \
-                jansson-devel \
-                jq \
-                libtool \
-                libyaml-devel \
-                libnfnetlink-devel \
-                libnetfilter_queue-devel \
-                libnet-devel \
-                libcap-ng-devel \
-                libevent-devel \
-                libmaxminddb-devel \
-                libpcap-devel \
-                libtool \
-                lz4-devel \
-                make \
-                pcre2-devel \
-                pkgconfig \
-                python3-devel \
-                python3-sphinx \
-                python3-yaml \
-                sudo \
-                which \
-                zlib-devel
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - name: Install Minimum Supported Rust Version
         run: |

@@ -29,7 +29,11 @@ jobs:
   check-formatting:
     name: Formatting Check (clang 17)
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     continue-on-error: false
     steps:
 
@@ -40,56 +44,6 @@ jobs:
           path: ~/.cargo/registry
           key: cargo-registry
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                cargo \
-                cbindgen \
-                clang-format-17 \
-                git \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libhiredis-dev \
-                libjansson-dev \
-                make \
-                rustc \
-                python-is-python3 \
-                python3 \
-                software-properties-common \
-                wget \
-                zlib1g \
-                zlib1g-dev
-      # Checking out the branch is not as simple as "checking out".
-      #
-      # In case main has any new commits since we branched off, github will
-      # automatically add a "merge commit" from our branch to main and check
-      # this out instead of the original last commit on the branch.
-      #
-      # This screws up git clang-format as it'll also format the "merge commit"
-      # and essentially report any formatting issues in the "merge commit".
-      # However, we really don't care about any of the new commits on main.
-      #
-      # There are supposed to be ways to use with/ref to fix that and while
-      # they work perfectly well for pull requests within the forked repo, none
-      # of the ones tried worked for pull requests from forks to the OISF repo.
-      #
-      # My patience simply ran too short to keep on looking. See follow-on
-      # action to manually fix this up.
       - name: Checkout - might be merge commit!
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
