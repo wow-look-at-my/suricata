@@ -210,7 +210,7 @@ fn dns_parse_answer<'a>(
                 // with empty data (data length = 0x0000)
                 if val.data.is_empty() && val.rrtype == DNSRecordType::OPT as u16 {
                     answers.push(DNSAnswerEntry {
-                        name: val.name.clone(),
+                        name: val.name,
                         rrtype: val.rrtype,
                         rrclass: val.rrclass,
                         ttl: val.ttl,
@@ -221,7 +221,7 @@ fn dns_parse_answer<'a>(
                 }
                 let (_, rdata) = dns_parse_rdata(val.data, message, val.rrtype, flags)?;
                 answers.push(DNSAnswerEntry {
-                    name: val.name.clone(),
+                    name: val.name,
                     rrtype: val.rrtype,
                     rrclass: val.rrclass,
                     ttl: val.ttl,
