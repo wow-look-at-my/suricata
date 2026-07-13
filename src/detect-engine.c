@@ -2190,9 +2190,8 @@ uint8_t DetectEngineInspectBufferSingle(DetectEngineCtx *de_ctx, DetectEngineThr
     SCLogDebug("running inspect on %d", list_id);
 
     void *ptx = DetectGetProgressTx(engine, f, alstate, txv, tx_id);
-    const bool eof =
-            (ptx != NULL) &&
-            (AppLayerParserGetStateProgress(f->proto, f->alproto, ptx, flags) > engine->progress);
+    const bool eof = (ptx != NULL) && (AppLayerParserGetStateProgress(f->proto, f->alproto, ptx,
+                                               flags) > engine->progress);
 
     SCLogDebug("list %d mpm? %s transforms %p", engine->sm_list, engine->mpm ? "true" : "false",
             engine->v2.transforms);
@@ -2253,9 +2252,8 @@ uint8_t DetectEngineInspectBufferGeneric(DetectEngineCtx *de_ctx, DetectEngineTh
     SCLogDebug("running inspect on %d", list_id);
 
     void *ptx = DetectGetProgressTx(engine, f, alstate, txv, tx_id);
-    const bool eof =
-            (ptx != NULL) &&
-            (AppLayerParserGetStateProgress(f->proto, f->alproto, ptx, flags) > engine->progress);
+    const bool eof = (ptx != NULL) && (AppLayerParserGetStateProgress(f->proto, f->alproto, ptx,
+                                               flags) > engine->progress);
 
     SCLogDebug("list %d mpm? %s transforms %p",
             engine->sm_list, engine->mpm ? "true" : "false", engine->v2.transforms);
@@ -2390,9 +2388,8 @@ uint8_t DetectEngineInspectMultiBufferGeneric(DetectEngineCtx *de_ctx,
     if (local_id == 0) {
         // That means we did not get even one buffer value from the multi-buffer
         void *ptx = DetectGetProgressTx(engine, f, alstate, txv, tx_id);
-        const bool eof =
-                (ptx != NULL) && (AppLayerParserGetStateProgress(f->proto, f->alproto, ptx, flags) >
-                                         engine->progress);
+        const bool eof = (ptx != NULL) && (AppLayerParserGetStateProgress(f->proto, f->alproto, ptx,
+                                                   flags) > engine->progress);
         if (eof && engine->match_on_null) {
             return DETECT_ENGINE_INSPECT_SIG_MATCH;
         }
