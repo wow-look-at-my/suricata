@@ -779,24 +779,36 @@ impl Default for SMBState {
     }
 }
 
+/// Create a `LruCache` with capacity `cap` without preallocating its
+/// backing table. `LruCache::new()` reserves space for `cap` entries up
+/// front, which for the SMB caches adds up to tens of KB per flow even
+/// if no entry is ever inserted. Starting from an unbounded (empty)
+/// cache and then setting the capacity keeps the eviction behavior
+/// identical while the table only grows on demand.
+fn lru_cache_lazy_alloc<K: std::hash::Hash + Eq, V>(cap: NonZeroUsize) -> LruCache<K, V> {
+    let mut cache = LruCache::unbounded();
+    cache.resize(cap);
+    cache
+}
+
 impl SMBState {
     /// Allocation function for a new TLS parser instance
     pub fn new() -> Self {
         Self {
             state_data: AppLayerStateData::default(),
-            ssn2vec_cache: LruCache::new(
+            ssn2vec_cache: lru_cache_lazy_alloc(
                 NonZeroUsize::new(unsafe { SMB_CFG_MAX_SSN2VEC_CACHE_SIZE }).unwrap(),
             ),
-            guid2name_cache: LruCache::new(
+            guid2name_cache: lru_cache_lazy_alloc(
                 NonZeroUsize::new(unsafe { SMB_CFG_MAX_GUID_CACHE_SIZE }).unwrap(),
             ),
-            read_offset_cache: LruCache::new(
+            read_offset_cache: lru_cache_lazy_alloc(
                 NonZeroUsize::new(unsafe { SMB_CFG_MAX_READ_OFFSET_CACHE_SIZE }).unwrap(),
             ),
-            ssn2tree_cache: LruCache::new(
+            ssn2tree_cache: lru_cache_lazy_alloc(
                 NonZeroUsize::new(unsafe { SMB_CFG_MAX_TREE_CACHE_SIZE }).unwrap(),
             ),
-            dcerpc_rec_frag_cache: LruCache::new(
+            dcerpc_rec_frag_cache: lru_cache_lazy_alloc(
                 NonZeroUsize::new(unsafe { SMB_CFG_MAX_FRAG_CACHE_SIZE }).unwrap(),
             ),
             skip_ts: 0,
