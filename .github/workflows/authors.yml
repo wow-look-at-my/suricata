@@ -28,7 +28,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - run: sudo apt -y install git
       - name: Fetch PR head for history inspection
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
