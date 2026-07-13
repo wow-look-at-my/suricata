@@ -816,6 +816,10 @@ int SCACTilePreparePatterns(MpmConfig *mpm_conf, MpmCtx *mpm_ctx)
 
     if (mpm_ctx->pattern_cnt == 0 || search_ctx->init_ctx == NULL) {
         SCLogDebug("no patterns supplied to this mpm_ctx");
+        /* no patterns can be added after prepare, so the init hash is
+         * no longer needed even if the ctx stays around */
+        SCFree(mpm_ctx->init_hash);
+        mpm_ctx->init_hash = NULL;
         return 0;
     }
     SCACTileCtx *ctx = search_ctx->init_ctx;
