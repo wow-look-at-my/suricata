@@ -948,7 +948,7 @@ static int DetectPcreParseCapture(const char *regexstr, DetectEngineCtx *de_ctx,
         if (strcmp(type_str, "pkt") == 0) {
             uint32_t varname_id = VarNameStoreRegister((char *)capture_str, VAR_TYPE_PKT_VAR);
             if (unlikely(varname_id == 0))
-                return -1;
+                goto error;
             pd->capids[pd->idx] = varname_id;
             pd->captypes[pd->idx] = VAR_TYPE_PKT_VAR;
             SCLogDebug("id %u type %u", pd->capids[pd->idx], pd->captypes[pd->idx]);
@@ -956,14 +956,14 @@ static int DetectPcreParseCapture(const char *regexstr, DetectEngineCtx *de_ctx,
         } else if (strcmp(type_str, "flow") == 0) {
             uint32_t varname_id = VarNameStoreRegister((char *)capture_str, VAR_TYPE_FLOW_VAR);
             if (unlikely(varname_id == 0))
-                return -1;
+                goto error;
             pd->capids[pd->idx] = varname_id;
             pd->captypes[pd->idx] = VAR_TYPE_FLOW_VAR;
             pd->idx++;
         } else if (strcmp(type_str, "alert") == 0) {
             uint32_t varname_id = VarNameStoreRegister((char *)capture_str, VAR_TYPE_ALERT_VAR);
             if (unlikely(varname_id == 0))
-                return -1;
+                goto error;
             pd->capids[pd->idx] = varname_id;
             pd->captypes[pd->idx] = VAR_TYPE_ALERT_VAR;
             pd->idx++;
