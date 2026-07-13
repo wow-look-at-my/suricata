@@ -15,7 +15,7 @@
  * 02110-1301, USA.
  */
 use crate::dcerpc::dcerpc::{
-    BindCtxItem, DCERPCBind, DCERPCBindAck, DCERPCBindAckResult, DCERPCHdr, DCERPCRequest, Uuid,
+    BindCtxItem, DCERPCBind, DCERPCBindAck, DCERPCBindAckResult, DCERPCHdr, DCERPCRequest,
 };
 use crate::dcerpc::dcerpc_udp::DCERPCHdrUdp;
 use nom8::bytes::streaming::take;
@@ -25,50 +25,14 @@ use nom8::number::complete::{le_u16, le_u32, le_u8, u16, u32};
 use nom8::number::Endianness;
 use nom8::{IResult, Parser};
 
-fn uuid_to_vec(uuid: Uuid) -> Vec<u8> {
-    let mut uuidtmp = uuid;
-    let mut vect: Vec<u8> = Vec::new();
-    vect.append(&mut uuidtmp.time_low);
-    vect.append(&mut uuidtmp.time_mid);
-    vect.append(&mut uuidtmp.time_hi_and_version);
-    vect.push(uuidtmp.clock_seq_hi_and_reserved);
-    vect.push(uuidtmp.clock_seq_low);
-    vect.append(&mut uuidtmp.node);
+/// Copy a raw 16 byte UUID, fixing up the byte order of the
+/// little-endian encoded time_low, time_mid and time_hi_and_version
+/// fields, in a single allocation.
+fn assemble_uuid(b: &[u8]) -> Vec<u8> {
+    let mut vect = Vec::with_capacity(16);
+    vect.extend_from_slice(&[b[3], b[2], b[1], b[0], b[5], b[4], b[7], b[6]]);
+    vect.extend_from_slice(&b[8..16]);
     vect
-}
-
-fn assemble_uuid(uuid: Uuid) -> Vec<u8> {
-    let mut uuidtmp = uuid;
-    let mut vect: Vec<u8> = Vec::new();
-    uuidtmp.time_low.reverse();
-    uuidtmp.time_mid.reverse();
-    uuidtmp.time_hi_and_version.reverse();
-    vect.append(&mut uuidtmp.time_low);
-    vect.append(&mut uuidtmp.time_mid);
-    vect.append(&mut uuidtmp.time_hi_and_version);
-    vect.push(uuidtmp.clock_seq_hi_and_reserved);
-    vect.push(uuidtmp.clock_seq_low);
-    vect.append(&mut uuidtmp.node);
-
-    vect
-}
-
-fn parse_uuid(i: &[u8]) -> IResult<&[u8], Uuid> {
-    let (i, time_low) = take(4_usize).parse(i)?;
-    let (i, time_mid) = take(2_usize).parse(i)?;
-    let (i, time_hi_and_version) = take(2_usize).parse(i)?;
-    let (i, clock_seq_hi_and_reserved) = le_u8.parse(i)?;
-    let (i, clock_seq_low) = le_u8.parse(i)?;
-    let (i, node) = take(6_usize).parse(i)?;
-    let uuid = Uuid {
-        time_low: time_low.to_vec(),
-        time_mid: time_mid.to_vec(),
-        time_hi_and_version: time_hi_and_version.to_vec(),
-        clock_seq_hi_and_reserved,
-        clock_seq_low,
-        node: node.to_vec(),
-    };
-    Ok((i, uuid))
 }
 
 pub(super) fn parse_dcerpc_udp_header(i: &[u8]) -> IResult<&[u8], DCERPCHdrUdp> {
@@ -103,27 +67,9 @@ pub(super) fn parse_dcerpc_udp_header(i: &[u8]) -> IResult<&[u8], DCERPCHdrUdp> 
         flags2,
         drep: drep.to_vec(),
         serial_hi,
-        objectuuid: match parse_uuid(objectuuid) {
-            Ok((_, vect)) => assemble_uuid(vect),
-            Err(_e) => {
-                SCLogDebug!("{}", _e);
-                vec![0]
-            }
-        },
-        interfaceuuid: match parse_uuid(interfaceuuid) {
-            Ok((_, vect)) => assemble_uuid(vect),
-            Err(_e) => {
-                SCLogDebug!("{}", _e);
-                vec![0]
-            }
-        },
-        activityuuid: match parse_uuid(activityuuid) {
-            Ok((_, vect)) => assemble_uuid(vect),
-            Err(_e) => {
-                SCLogDebug!("{}", _e);
-                vec![0]
-            }
-        },
+        objectuuid: assemble_uuid(objectuuid),
+        interfaceuuid: assemble_uuid(interfaceuuid),
+        activityuuid: assemble_uuid(activityuuid),
         server_boot,
         if_vers,
         seqnum,
@@ -185,15 +131,9 @@ pub(super) fn parse_bindctx_item(i: &[u8], endianness: Endianness) -> IResult<&[
     let result = BindCtxItem {
         ctxid,
         // UUID parsing for TCP seems to change as per endianness
-        uuid: match parse_uuid(uuid) {
-            Ok((_, vect)) => match endianness {
-                Endianness::Little => assemble_uuid(vect),
-                _ => uuid_to_vec(vect),
-            },
-            // Shouldn't happen
-            Err(_e) => {
-                vec![0]
-            }
+        uuid: match endianness {
+            Endianness::Little => assemble_uuid(uuid),
+            _ => uuid.to_vec(),
         },
         version,
         versionminor,
@@ -260,33 +200,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_uuid() {
+    fn test_assemble_uuid() {
         let uuid: &[u8] = &[
             0xb8, 0x4a, 0x9f, 0x4d, 0x1c, 0x7d, 0xcf, 0x11, 0x86, 0x1e, 0x00, 0x20, 0xaf, 0x6e,
             0x7c, 0x57,
         ];
-        let expected_uuid = Uuid {
-            time_low: vec![0xb8, 0x4a, 0x9f, 0x4d],
-            time_mid: vec![0x1c, 0x7d],
-            time_hi_and_version: vec![0xcf, 0x11],
-            clock_seq_hi_and_reserved: 0x86,
-            clock_seq_low: 0x1e,
-            node: vec![0x00, 0x20, 0xaf, 0x6e, 0x7c, 0x57],
-        };
-        let (_remainder, parsed_uuid) = parse_uuid(uuid).unwrap();
-        assert_eq!(expected_uuid, parsed_uuid);
-    }
-
-    #[test]
-    fn test_assemble_uuid() {
-        let uuid = Uuid {
-            time_low: vec![0xb8, 0x4a, 0x9f, 0x4d],
-            time_mid: vec![0x1c, 0x7d],
-            time_hi_and_version: vec![0xcf, 0x11],
-            clock_seq_hi_and_reserved: 0x86,
-            clock_seq_low: 0x1e,
-            node: vec![0x00, 0x20, 0xaf, 0x6e, 0x7c, 0x57],
-        };
         let expected_val = vec![
             0x4d, 0x9f, 0x4a, 0xb8, 0x7d, 0x1c, 0x11, 0xcf, 0x86, 0x1e, 0x00, 0x20, 0xaf, 0x6e,
             0x7c, 0x57,
