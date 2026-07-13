@@ -23,7 +23,6 @@ use crate::smb::events::*;
 use crate::smb::smb::{cfg_max_stub_size, *};
 use crate::smb::smb2::*;
 use crate::smb::smb_status::*;
-use uuid;
 
 impl SMBCommonHdr {
     /// helper for DCERPC tx tracking. Check if we need
