@@ -1881,7 +1881,7 @@ detect:
 
   # Thresholding hash table settings.
   thresholds:
-    hash-size: 16384
+    hash-size: 4096
     memcap: 16 MiB
 
   profiling:
