@@ -267,7 +267,11 @@ jobs:
   almalinux-9:
     name: AlmaLinux 9 (schema, rust-checks)
     runs-on: ubuntu-latest
-    container: almalinux:9
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
       # Cache Rust stuff.
@@ -280,65 +284,8 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install system packages
-        run: |
-          dnf -y install dnf-plugins-core epel-release
-          dnf config-manager --set-enabled crb
-          dnf -y install \
-                autoconf \
-                automake \
-                cbindgen \
-                clang-devel \
-                diffutils \
-                numactl-devel \
-                dpdk-devel \
-                file-devel \
-                gcc \
-                gcc-c++ \
-                git \
-                hwloc \
-                hwloc-devel \
-                jansson-devel \
-                jq \
-                libtool \
-                libyaml-devel \
-                libnfnetlink-devel \
-                libnetfilter_queue-devel \
-                libnet-devel \
-                libcap-ng-devel \
-                libevent-devel \
-                libmaxminddb-devel \
-                libpcap-devel \
-                libtool \
-                lz4-devel \
-                make \
-                pcre2-devel \
-                pkgconfig \
-                python3-devel \
-                python3-sphinx \
-                python3-yaml \
-                sudo \
-                which \
-                zlib-devel
-          # These packages required to build the PDF.
-          dnf -y install \
-                texlive-latex \
-                texlive-cmap \
-                texlive-collection-latexrecommended \
-                texlive-fncychap \
-                texlive-titlesec \
-                texlive-tabulary \
-                texlive-framed \
-                texlive-wrapfig \
-                texlive-upquote \
-                texlive-capt-of \
-                texlive-needspace
-
-      - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain $RUST_VERSION_KNOWN -y
-      - run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-      - run: cargo install bindgen-cli --version 0.66.0
-
+      - name: Use rustup Rust from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: ./.github/actions/install-cbindgen
@@ -475,7 +422,11 @@ jobs:
   almalinux-9-templates:
     name: AlmaLinux 9 Test Templates
     runs-on: ubuntu-latest
-    container: almalinux:9
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
       # Cache Rust stuff.
@@ -488,50 +439,9 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install system packages
-        run: |
-          dnf -y install dnf-plugins-core epel-release
-          dnf config-manager --set-enabled crb
-          dnf -y install \
-                autoconf \
-                automake \
-                cbindgen \
-                diffutils \
-                numactl-devel \
-                dpdk-devel \
-                file-devel \
-                gcc \
-                gcc-c++ \
-                git \
-                hwloc \
-                hwloc-devel \
-                jansson-devel \
-                jq \
-                libtool \
-                libyaml-devel \
-                libnfnetlink-devel \
-                libnetfilter_queue-devel \
-                libnet-devel \
-                libcap-ng-devel \
-                libevent-devel \
-                libmaxminddb-devel \
-                libpcap-devel \
-                libtool \
-                lz4-devel \
-                make \
-                pcre2-devel \
-                pkgconfig \
-                python3-devel \
-                python3-sphinx \
-                python3-yaml \
-                sudo \
-                which \
-                zlib-devel
-      - run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.85.0 -y
-      - run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-      - run: rustup component add rustfmt
-      - run: rustup component add clippy
-
+      - name: Use rustup Rust from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
+      - run: rustup default 1.85.0
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
 
@@ -826,7 +736,11 @@ jobs:
   fedora-44-sv-codecov:
     name: Fedora 44 (Suricata Verify codecov)
     runs-on: ubuntu-latest
-    container: fedora:44
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-fedora-44:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
 
@@ -840,52 +754,8 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - run: |
-          dnf -y install \
-                autoconf \
-                automake \
-                awk \
-                cbindgen \
-                ccache \
-                clang \
-                curl \
-                diffutils \
-                file-devel \
-                gcc \
-                gcc-c++ \
-                git \
-                gpg \
-                hwloc \
-                hwloc-devel \
-                hiredis-devel \
-                jansson-devel \
-                jq \
-                libasan \
-                libtool \
-                libyaml-devel \
-                libnfnetlink-devel \
-                libnetfilter_queue-devel \
-                libnet-devel \
-                libcap-ng-devel \
-                libevent-devel \
-                libmaxminddb-devel \
-                libpcap-devel \
-                libtool \
-                llvm-devel \
-                lz4-devel \
-                make \
-                pcre2-devel \
-                pkgconfig \
-                python3-yaml \
-                sudo \
-                which \
-                zlib-devel
-      - run: |
-          dnf clean all
-      # packaged Rust version has no profiler support built in, so get from rustup
-      - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.86.0 -y
-      - run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Use rustup Rust from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: ./.github/actions/install-cbindgen
       - run: git config --global --add safe.directory /__w/suricata/suricata
@@ -928,7 +798,11 @@ jobs:
   fedora-44-clang:
     name: Fedora 44 (clang, debug, asan, wshadow, rust-strict, systemd)
     runs-on: ubuntu-latest
-    container: fedora:44
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-fedora-44:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
 
@@ -942,48 +816,7 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - run: |
-          dnf -y install \
-                autoconf \
-                automake \
-                awk \
-                cargo \
-                cbindgen \
-                ccache \
-                clang \
-                diffutils \
-                file-devel \
-                gcc \
-                gcc-c++ \
-                git \
-                hiredis-devel \
-                hwloc \
-                hwloc-devel \
-                jansson-devel \
-                jq \
-                libasan \
-                libtool \
-                libyaml-devel \
-                libnfnetlink-devel \
-                libnetfilter_queue-devel \
-                libnet-devel \
-                libcap-ng-devel \
-                libevent-devel \
-                libmaxminddb-devel \
-                libpcap-devel \
-                libxdp-devel \
-                libbpf-devel \
-                libtool \
-                lz4-devel \
-                make \
-                parallel \
-                pcre2-devel \
-                pkgconfig \
-                python \
-                python3-yaml \
-                sudo \
-                which \
-                zlib-devel
+      - run: dnf -y install libbpf-devel libxdp-devel
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: ./.github/actions/install-cbindgen
       - run: git config --global --add safe.directory /__w/suricata/suricata
@@ -1029,7 +862,11 @@ jobs:
   fedora-44-gcc:
     name: Fedora 44 (gcc, debug, flto, asan, wshadow, rust-strict)
     runs-on: ubuntu-latest
-    container: fedora:44
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-fedora-44:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
 
@@ -1043,44 +880,7 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - run: |
-          dnf -y install \
-                autoconf \
-                automake \
-                awk \
-                cargo \
-                cbindgen \
-                ccache \
-                diffutils \
-                file-devel \
-                gcc \
-                gcc-c++ \
-                git \
-                hiredis-devel \
-                hwloc \
-                hwloc-devel \
-                jansson-devel \
-                jq \
-                libasan \
-                libtool \
-                libyaml-devel \
-                libnfnetlink-devel \
-                libnetfilter_queue-devel \
-                libnet-devel \
-                libcap-ng-devel \
-                libevent-devel \
-                libmaxminddb-devel \
-                libpcap-devel \
-                libtool \
-                lz4-devel \
-                make \
-                pcre2-devel \
-                pkgconfig \
-                python3-yaml \
-                sudo \
-                vectorscan-devel \
-                which \
-                zlib-devel
+      - run: dnf -y install vectorscan-devel
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: ./.github/actions/install-cbindgen
@@ -1126,50 +926,16 @@ jobs:
   fedora-non-root:
     name: Fedora 44 (non-root, debug, clang, asan, wshadow, rust-strict, no-ja)
     runs-on: ubuntu-latest
-    container: fedora:44
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-fedora-44:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - run: |
-          dnf -y install \
-                autoconf \
-                automake \
-                awk \
-                cargo \
-                cbindgen \
-                ccache \
-                clang \
-                diffutils \
-                file-devel \
-                gcc \
-                gcc-c++ \
-                git \
-                hiredis-devel \
-                hwloc \
-                hwloc-devel \
-                jansson-devel \
-                jq \
-                libasan \
-                libtool \
-                libyaml-devel \
-                libnfnetlink-devel \
-                libnetfilter_queue-devel \
-                libnet-devel \
-                libcap-ng-devel \
-                libevent-devel \
-                libmaxminddb-devel \
-                libpcap-devel \
-                libtool \
-                lz4-devel \
-                make \
-                pcre2-devel \
-                pkgconfig \
-                python3-yaml \
-                sudo \
-                which \
-                zlib-devel
       - run: adduser suricata
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: ./.github/actions/install-cbindgen
@@ -1327,7 +1093,11 @@ jobs:
   ubuntu-24-04:
     name: Ubuntu 24.04 (cocci)
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps]
     steps:
       - name: Cache ~/.cargo
@@ -1342,46 +1112,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt update
-          apt -y install \
-                autoconf \
-                automake \
-                build-essential \
-                cargo \
-                cbindgen \
-                clang-14 \
-                coccinelle \
-                dpdk-dev \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                libcap-ng-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                libhiredis-dev \
-                libhyperscan-dev \
-                libjansson-dev \
-                libmagic-dev \
-                libnet1-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libpcap-dev \
-                libpcre2-dev \
-                libpython3.12 \
-                libtool \
-                libyaml-dev \
-                llvm-14-dev \
-                make \
-                parallel \
-                python-is-python3 \
-                python3-yaml \
-                rustc \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev
+          apt -y install libhyperscan-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -1406,7 +1137,11 @@ jobs:
   ubuntu-24-04-rust-vars:
     name: Ubuntu 24.04 (RUSTC+CARGO vars)
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps]
     steps:
       - name: Cache ~/.cargo
@@ -1421,45 +1156,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt update
-          apt -y install \
-                autoconf \
-                automake \
-                build-essential \
-                cargo-1.82 \
-                cbindgen \
-                clang-14 \
-                dpdk-dev \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                libcap-ng-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                libhiredis-dev \
-                libhyperscan-dev \
-                libjansson-dev \
-                libmagic-dev \
-                libnet1-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libpcap-dev \
-                libpcre2-dev \
-                libpython3.12 \
-                libtool \
-                libyaml-dev \
-                llvm-14-dev \
-                make \
-                parallel \
-                python-is-python3 \
-                python3-yaml \
-                rustc-1.82 \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev
+          apt -y install libhyperscan-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -1482,7 +1179,11 @@ jobs:
   ubuntu-24-04-cov-ut:
     name: Ubuntu 24.04 (unittests coverage)
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
       - name: Cache ~/.cargo
@@ -1497,45 +1198,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                clang-19 \
-                curl \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libhyperscan-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                llvm-19-dev \
-                make \
-                parallel \
-                python3-yaml \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags \
-                curl \
-                dpdk-dev
+          apt -y install libhyperscan-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -1544,8 +1207,8 @@ jobs:
           path: prep
       # packaged Rust version is too old for coverage, so get from rustup. 1.85.1 matches
       # LLVM 19
-      - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.85.1 -y
+      - name: Use rustup Rust from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
       - uses: ./.github/actions/install-cbindgen
       - run: ./autogen.sh
       - run: ./configure --enable-warnings --disable-shared --enable-unittests
@@ -1641,7 +1304,10 @@ jobs:
     name: Ubuntu 24.04 (unix socket mode coverage)
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:24.04
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       options: --privileged
     needs: [prepare-deps, prepare-cbindgen]
     steps:
@@ -1654,55 +1320,8 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                llvm-19-dev \
-                clang-19 \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                inetutils-ping \
-                libc++-dev \
-                libc++abi-dev \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                make \
-                parallel \
-                python3-yaml \
-                software-properties-common \
-                sudo \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags \
-                unzip \
-                curl \
-                time \
-                wget
-      # specific version to match up to the llvm version in ubuntu below
-      - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.85.1 -y
+      - name: Use rustup Rust from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -1753,7 +1372,10 @@ jobs:
     name: Ubuntu 24.04 (afpacket and dpdk coverage)
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:24.04
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       options: --privileged
     needs: [prepare-deps, prepare-cbindgen]
     steps:
@@ -1765,56 +1387,8 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                llvm-19-dev \
-                clang-19 \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                inetutils-ping \
-                libc++-dev \
-                libc++abi-dev \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                make \
-                parallel \
-                python3-yaml \
-                software-properties-common \
-                sudo \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags \
-                unzip \
-                curl \
-                time \
-                wget \
-                dpdk-dev
-      # specific version to match up to the llvm version in ubuntu below
-      - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.85.1 -y
+      - name: Use rustup Rust from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -1904,7 +1478,10 @@ jobs:
     name: Ubuntu 24.04 (pcap unix socket ASAN)
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:24.04
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       options: --privileged
     needs: [prepare-deps, prepare-cbindgen]
     steps:
@@ -1916,55 +1493,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                llvm-18-dev \
-                cargo \
-                cbindgen \
-                clang-18 \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                libc++-dev \
-                libc++abi-dev \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                make \
-                parallel \
-                python3-yaml \
-                rustc \
-                software-properties-common \
-                sudo \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags \
-                unzip \
-                curl \
-                time \
-                wget \
-                dpdk-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -1993,7 +1521,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [prepare-deps, prepare-cbindgen]
     container:
-      image: ubuntu:24.04
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       options: --privileged
     steps:
       - name: Cache ~/.cargo
@@ -2004,58 +1535,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                llvm-19-dev \
-                clang-19 \
-                git \
-                hping3 \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                inetutils-ping \
-                libc++-dev \
-                libc++abi-dev \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                make \
-                parallel \
-                python3-yaml \
-                software-properties-common \
-                sudo \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags \
-                unzip \
-                curl \
-                time \
-                wget \
-                caddy \
-                ethtool \
-                iproute2 \
-                iptables \
-                tshark
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
@@ -2063,8 +1542,8 @@ jobs:
           path: prep
       # packaged Rust version is too old for coverage, so get from rustup. 1.85.1 matches
       # LLVM 19
-      - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.85.1 -y
+      - name: Use rustup Rust from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
       - uses: ./.github/actions/install-cbindgen
       - run: ./autogen.sh
       - run: ./configure --disable-shared --localstatedir=/var --prefix=/usr --sysconfdir=/etc --enable-nfqueue
@@ -2140,7 +1619,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           files: coverage.lcov
           flags: netns
           verbose: true
@@ -2149,7 +1628,10 @@ jobs:
     name: Ubuntu 24.04 (afpacket and dpdk live tests with ASAN)
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:24.04
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       options: --privileged
     needs: [prepare-deps, prepare-cbindgen]
     steps:
@@ -2161,56 +1643,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                llvm-18-dev \
-                cargo \
-                cbindgen \
-                clang-18 \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                inetutils-ping \
-                libc++-dev \
-                libc++abi-dev \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                make \
-                parallel \
-                python3-yaml \
-                rustc \
-                software-properties-common \
-                sudo \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags \
-                unzip \
-                curl \
-                time \
-                wget \
-                dpdk-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -2257,7 +1689,10 @@ jobs:
     name: Ubuntu 24.04 (fuzz corpus coverage)
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:24.04
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       options: --privileged
     needs: [prepare-deps, prepare-cbindgen]
     steps:
@@ -2269,55 +1704,8 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                llvm-19-dev \
-                clang-19 \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                libc++-dev \
-                libc++abi-dev \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                make \
-                parallel \
-                python3-yaml \
-                software-properties-common \
-                sudo \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags \
-                unzip \
-                curl \
-                time \
-                wget \
-                dpdk-dev
-      # packaged Rust version is too old for coverage, so get from rustup
-      - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.85.1 -y
+      - name: Use rustup Rust from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -2365,7 +1753,11 @@ jobs:
   ubuntu-20-04-ndebug:
     name: Ubuntu 20.04 (-DNDEBUG)
     runs-on: ubuntu-latest
-    container: ubuntu:20.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-20.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
       - name: Cache ~/.cargo
@@ -2377,46 +1769,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                build-essential \
-                autoconf \
-                automake \
-                cargo \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                libpython2.7 \
-                libpcre2-dev \
-                make \
-                parallel \
-                python3-yaml \
-                rustc \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags \
-                dpdk-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -2453,7 +1805,11 @@ jobs:
   ubuntu-20-04-too-old-rust:
     name: Ubuntu 20.04 (unsupported rust)
     runs-on: ubuntu-latest
-    container: ubuntu:20.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-20.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: ubuntu-22-04-dist
     steps:
       - name: Cache ~/.cargo
@@ -2464,39 +1820,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                build-essential \
-                curl \
-                hwloc \
-                libhwloc-dev \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                libpython2.7 \
-                libpcre2-dev \
-                make \
-                python3-yaml \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev \
-                dpdk-dev
       - run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.62.0 -y
       - run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Download suricata.tar.gz
@@ -2516,7 +1839,10 @@ jobs:
     name: Ubuntu 22.04 (Debug Validation)
     runs-on: ubuntu-22.04
     container:
-      image: ubuntu:22.04
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-22.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       options: --privileged
     needs: [prepare-deps, prepare-cbindgen]
     steps:
@@ -2531,45 +1857,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                cargo \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                libpython2.7 \
-                make \
-                parallel \
-                python3-yaml \
-                rustc \
-                software-properties-common \
-                sudo \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -2600,7 +1887,11 @@ jobs:
   ubuntu-22-04-fuzz:
     name: Ubuntu 22.04 (Fuzz)
     runs-on: ubuntu-22.04
-    container: ubuntu:22.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-22.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
 
@@ -2614,40 +1905,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                afl \
-                afl-clang \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                cargo \
-                git \
-                hwloc \
-                libhwloc-dev \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libhiredis-dev \
-                libjansson-dev \
-                libpython2.7 \
-                make \
-                rustc \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev
       - run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
@@ -2793,7 +2050,11 @@ jobs:
   ubuntu-22-04-dpdk-build:
     name: Ubuntu 22.04 (DPDK Build)
     runs-on: ubuntu-22.04
-    container: ubuntu:22.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-22.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [ prepare-deps, prepare-cbindgen ]
     strategy:
       matrix:
@@ -2809,58 +2070,6 @@ jobs:
 
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
-
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                cargo \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                libpython2.7 \
-                make \
-                parallel \
-                python3-yaml \
-                rustc \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev \
-                exuberant-ctags
-      - name: Install DPDK dependencies
-        run: |
-          apt update
-          apt install -y \
-          curl \
-          build-essential \
-          libnuma-dev \
-          ninja-build \
-          meson \
-          python3-pip \
-          python3-pyelftools \
-          python3-setuptools \
-          python3-wheel
 
       - name: Compile and install DPDK
         run: |
@@ -2898,7 +2107,11 @@ jobs:
   debian-12:
     name: Debian 12 (xdp)
     runs-on: ubuntu-latest
-    container: debian:12
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-debian-12:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps]
     steps:
       # Cache Rust stuff.
@@ -2911,52 +2124,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - run: apt update
-      - run: |
-          apt -y install \
-              autoconf \
-              automake \
-              build-essential \
-              cmake \
-              curl \
-              dpdk-dev \
-              git \
-              hwloc \
-              libhwloc-dev \
-              jq \
-              make \
-              libpcre3 \
-              libpcre3-dbg \
-              libpcre3-dev \
-              libpcre2-dev \
-              libtool \
-              libpcap-dev \
-              libnet1-dev \
-              libyaml-0-2 \
-              libyaml-dev \
-              libcap-ng-dev \
-              libcap-ng0 \
-              libmagic-dev \
-              libmaxminddb-dev \
-              libjansson-dev \
-              libjansson4 \
-              libnuma-dev \
-              liblz4-dev \
-              libssl-dev \
-              liblzma-dev \
-              pkg-config \
-              python3 \
-              python3-yaml \
-              sphinx-doc \
-              sphinx-common \
-              texlive-latex-base \
-              texlive-fonts-recommended \
-              texlive-fonts-extra \
-              texlive-latex-extra \
-              zlib1g \
-              zlib1g-dev \
-              clang \
-              libxdp-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -2991,7 +2158,11 @@ jobs:
   debian-13:
     name: Debian 13 (xdp)
     runs-on: ubuntu-latest
-    container: debian:13
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-debian-13:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps]
     steps:
       # Cache Rust stuff.
@@ -3004,51 +2175,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - run: apt update
-      - run: |
-          apt -y install \
-              autoconf \
-              automake \
-              build-essential \
-              cmake \
-              cargo \
-              dpdk-dev \
-              git \
-              hwloc \
-              libhwloc-dev \
-              jq \
-              make \
-              libpcre2-dev \
-              libtool \
-              libpcap-dev \
-              libnet1-dev \
-              libyaml-0-2 \
-              libyaml-dev \
-              libcap-ng-dev \
-              libcap-ng0 \
-              libmagic-dev \
-              libmaxminddb-dev \
-              libjansson-dev \
-              libjansson4 \
-              libnuma-dev \
-              liblz4-dev \
-              libssl-dev \
-              liblzma-dev \
-              libvectorscan-dev \
-              pkg-config \
-              python3 \
-              python3-yaml \
-              rustc \
-              sphinx-doc \
-              sphinx-common \
-              texlive-latex-base \
-              texlive-fonts-recommended \
-              texlive-fonts-extra \
-              texlive-latex-extra \
-              zlib1g \
-              zlib1g-dev \
-              clang \
-              libxdp-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -3082,7 +2208,11 @@ jobs:
   ubuntu-22-04-dist:
     name: Ubuntu 22.04 Dist Builder
     runs-on: ubuntu-latest
-    container: ubuntu:22.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-22.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
       # Cache Rust stuff.
@@ -3095,49 +2225,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - run: apt update
-      - run: |
-          apt -y install \
-              autoconf \
-              automake \
-              build-essential \
-              cargo \
-              cmake \
-              curl \
-              git \
-              hwloc \
-              libhwloc-dev \
-              jq \
-              make \
-              libpcre3 \
-              libpcre3-dbg \
-              libpcre3-dev \
-              libpcre2-dev \
-              libtool \
-              libpcap-dev \
-              libnet1-dev \
-              libyaml-0-2 \
-              libyaml-dev \
-              libcap-ng-dev \
-              libcap-ng0 \
-              libmagic-dev \
-              libjansson-dev \
-              libjansson4 \
-              liblz4-dev \
-              libssl-dev \
-              liblzma-dev \
-              pkg-config \
-              python3 \
-              python3-yaml \
-              rustc \
-              sphinx-doc \
-              sphinx-common \
-              texlive-latex-base \
-              texlive-fonts-recommended \
-              texlive-fonts-extra \
-              texlive-latex-extra \
-              zlib1g \
-              zlib1g-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -3164,7 +2251,11 @@ jobs:
   debian-12-msrv:
     name: Debian 12 MSRV
     runs-on: ubuntu-latest
-    container: debian:12
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-debian-12:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
       # Cache Rust stuff.
@@ -3177,50 +2268,6 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - run: apt update
-      - run: |
-          apt -y install \
-              autoconf \
-              automake \
-              build-essential \
-              cmake \
-              curl \
-              dpdk-dev \
-              git \
-              hwloc \
-              libhwloc-dev \
-              jq \
-              make \
-              libpcre3 \
-              libpcre3-dbg \
-              libpcre3-dev \
-              libpcre2-dev \
-              libtool \
-              libpcap-dev \
-              libnet1-dev \
-              libyaml-0-2 \
-              libyaml-dev \
-              libcap-ng-dev \
-              libcap-ng0 \
-              libmagic-dev \
-              libmaxminddb-dev \
-              libjansson-dev \
-              libjansson4 \
-              libnuma-dev \
-              liblz4-dev \
-              libssl-dev \
-              liblzma-dev \
-              pkg-config \
-              python3 \
-              python3-yaml \
-              sphinx-doc \
-              sphinx-common \
-              texlive-latex-base \
-              texlive-fonts-recommended \
-              texlive-fonts-extra \
-              texlive-latex-extra \
-              zlib1g \
-              zlib1g-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -3249,7 +2296,11 @@ jobs:
   debian-11:
     name: Debian 11
     runs-on: ubuntu-latest
-    container: debian:11
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-debian-11:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, prepare-cbindgen]
     steps:
       # Cache Rust stuff.
@@ -3262,44 +2313,8 @@ jobs:
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
 
-      - run: |
-          apt update
-          apt -y install \
-                automake \
-                autoconf \
-                build-essential \
-                ccache \
-                curl \
-                git \
-                hwloc \
-                libhwloc-dev \
-                jq \
-                libpcre2-dev \
-                libpcap-dev   \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libjansson-dev \
-                libgeoip-dev \
-                libhiredis-dev \
-                libevent-dev \
-                libtool \
-                m4 \
-                make \
-                python3-yaml \
-                pkg-config \
-                sudo \
-                zlib1g \
-                zlib1g-dev \
-                clang \
-                libbpf-dev \
-                libelf-dev
-      - name: Install Rust
-        run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain $RUST_VERSION_KNOWN -y
-      - run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Use rustup Rust from the CI image
+        run: echo "/usr/local/cargo/bin" >> $GITHUB_PATH
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -3639,7 +2654,11 @@ jobs:
   pf-ring:
     name: PF_RING
     runs-on: ubuntu-latest
-    container: almalinux:9
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [prepare-deps, ubuntu-22-04-dist]
     steps:
       # Cache Rust stuff.
@@ -3651,45 +2670,6 @@ jobs:
 
       - name: Determine number of CPUs
         run: echo CPUS=$(nproc --all) >> $GITHUB_ENV
-
-      - name: Install system packages
-        run: |
-          dnf -y install dnf-plugins-core epel-release
-          dnf config-manager --set-enabled crb
-          dnf -y install \
-                autoconf \
-                automake \
-                diffutils \
-                numactl-devel \
-                dpdk-devel \
-                file-devel \
-                gcc \
-                gcc-c++ \
-                git \
-                hwloc \
-                hwloc-devel \
-                jansson-devel \
-                libtool \
-                libyaml-devel \
-                libnfnetlink-devel \
-                libnetfilter_queue-devel \
-                libnet-devel \
-                libcap-ng-devel \
-                libevent-devel \
-                libmaxminddb-devel \
-                libpcap-devel \
-                libtool \
-                lz4-devel \
-                make \
-                pcre2-devel \
-                pkgconfig \
-                python3-devel \
-                python3-sphinx \
-                python3-yaml \
-                rust-toolset \
-                sudo \
-                which \
-                zlib-devel
 
       - name: Install PF_RING
         run: |

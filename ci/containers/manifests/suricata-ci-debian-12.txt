@@ -1,0 +1,52 @@
+# suricata-ci-debian-12 (FROM debian:12)
+#
+# Covers builds.yml jobs: debian-12 (xdp), debian-12-msrv
+#
+# Union of those jobs' apt install steps. The two lists are identical
+# except that debian-12 also installs clang and libxdp-dev (both baked;
+# eBPF/XDP support still needs the explicit --enable-ebpf configure flag
+# the debian-12 job passes, so they are inert for the msrv job).
+# rustup MSRV toolchain: see suricata-ci-debian-12.post.sh.
+autoconf
+automake
+build-essential
+clang
+cmake
+curl
+dpdk-dev
+git
+hwloc
+libhwloc-dev
+jq
+make
+libpcre3
+libpcre3-dbg
+libpcre3-dev
+libpcre2-dev
+libtool
+libpcap-dev
+libnet1-dev
+libyaml-0-2
+libyaml-dev
+libcap-ng-dev
+libcap-ng0
+libmagic-dev
+libmaxminddb-dev
+libjansson-dev
+libjansson4
+libnuma-dev
+liblz4-dev
+libssl-dev
+liblzma-dev
+libxdp-dev
+pkg-config
+python3
+python3-yaml
+sphinx-doc
+sphinx-common
+texlive-latex-base
+texlive-fonts-recommended
+texlive-fonts-extra
+texlive-latex-extra
+zlib1g
+zlib1g-dev

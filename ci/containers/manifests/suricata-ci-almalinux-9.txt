@@ -1,0 +1,62 @@
+# suricata-ci-almalinux-9 (FROM almalinux:9)
+#
+# Covers:
+#   builds.yml:      almalinux-9, almalinux-9-templates, pf-ring
+#   rust-checks.yml: audit, update
+#
+# Union of those jobs' dnf install steps, replicated verbatim. EPEL + CRB
+# are enabled by install-deps.sh. rust-toolset comes from the pf-ring job;
+# clang-devel and the texlive set come from the almalinux-9 job.
+# Rust toolchains/bindgen/cargo-audit: see suricata-ci-almalinux-9.post.sh.
+#
+# NOT baked on purpose:
+#   - pfring (external ntop repo; the pf-ring job keeps that install step)
+#   - the almalinux-9-no-jansson and almalinux-9-minimal-* jobs must NOT
+#     use this image (testing absence/minimal installs is their point)
+autoconf
+automake
+cbindgen
+clang-devel
+diffutils
+numactl-devel
+dpdk-devel
+file-devel
+gcc
+gcc-c++
+git
+hwloc
+hwloc-devel
+jansson-devel
+jq
+libtool
+libyaml-devel
+libnfnetlink-devel
+libnetfilter_queue-devel
+libnet-devel
+libcap-ng-devel
+libevent-devel
+libmaxminddb-devel
+libpcap-devel
+lz4-devel
+make
+pcre2-devel
+pkgconfig
+python3-devel
+python3-sphinx
+python3-yaml
+rust-toolset
+sudo
+which
+zlib-devel
+# PDF build deps (almalinux-9 job installs these for distcheck docs)
+texlive-latex
+texlive-cmap
+texlive-collection-latexrecommended
+texlive-fncychap
+texlive-titlesec
+texlive-tabulary
+texlive-framed
+texlive-wrapfig
+texlive-upquote
+texlive-capt-of
+texlive-needspace

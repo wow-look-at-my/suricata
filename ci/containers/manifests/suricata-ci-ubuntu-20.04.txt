@@ -1,0 +1,48 @@
+# suricata-ci-ubuntu-20.04 (FROM ubuntu:20.04)
+#
+# Covers builds.yml jobs: ubuntu-20-04-ndebug, ubuntu-20-04-too-old-rust
+#
+# Union of those jobs' apt install steps, replicated verbatim. The
+# too-old-rust job keeps its rustup 1.62.0 install step in the workflow --
+# installing an unsupported Rust IS that test -- so no Rust is baked here
+# beyond the apt cargo/rustc used by the ndebug job.
+#
+# Bonus: ubuntu:20.04 (focal) is EOL; baking the packages now insulates
+# these jobs from the archive being moved to old-releases.ubuntu.com.
+autoconf
+automake
+build-essential
+cargo
+curl
+dpdk-dev
+exuberant-ctags
+git
+hwloc
+jq
+libcap-ng-dev
+libcap-ng0
+libevent-dev
+libevent-pthreads-2.1-7
+libhiredis-dev
+libhwloc-dev
+libjansson-dev
+libmagic-dev
+libnet1-dev
+libnetfilter-queue-dev
+libnetfilter-queue1
+libnfnetlink-dev
+libnfnetlink0
+libnuma-dev
+libpcap-dev
+libpcre2-dev
+libpython2.7
+libtool
+libyaml-0-2
+libyaml-dev
+make
+parallel
+python3-yaml
+rustc
+software-properties-common
+zlib1g
+zlib1g-dev

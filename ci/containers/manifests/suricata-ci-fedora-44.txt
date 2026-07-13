@@ -1,0 +1,53 @@
+# suricata-ci-fedora-44 (FROM fedora:44)
+#
+# Covers builds.yml jobs:
+#   fedora-44-sv-codecov, fedora-44-clang, fedora-44-gcc, fedora-non-root
+#
+# Union of those jobs' dnf install steps, replicated verbatim, EXCEPT the
+# following packages which are deliberately left out because ./configure
+# auto-detects them and only a single job installs them (baking them would
+# silently change the feature set built by the other jobs). The owning job
+# keeps a small dnf install step instead:
+#   - vectorscan-devel           (fedora-44-gcc only)
+#   - libxdp-devel, libbpf-devel (fedora-44-clang only)
+# rustup 1.86.0 for sv-codecov: see suricata-ci-fedora-44.post.sh.
+autoconf
+automake
+awk
+cargo
+cbindgen
+ccache
+clang
+curl
+diffutils
+file-devel
+gcc
+gcc-c++
+git
+gpg
+hiredis-devel
+hwloc
+hwloc-devel
+jansson-devel
+jq
+libasan
+libtool
+libyaml-devel
+libnfnetlink-devel
+libnetfilter_queue-devel
+libnet-devel
+libcap-ng-devel
+libevent-devel
+libmaxminddb-devel
+libpcap-devel
+llvm-devel
+lz4-devel
+make
+parallel
+pcre2-devel
+pkgconfig
+python
+python3-yaml
+sudo
+which
+zlib-devel

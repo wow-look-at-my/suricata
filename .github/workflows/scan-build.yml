@@ -20,7 +20,11 @@ jobs:
   scan-build:
     name: Scan-build
     runs-on: ubuntu-latest
-    container: ubuntu:26.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-26.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Cache scan-build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -28,47 +32,6 @@ jobs:
           path: ~/.cargo
           key: scan-build
 
-      - name: Install system packages
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                cargo \
-                cbindgen \
-                clang-22 \
-                clang-tools-22 \
-                dpdk-dev \
-                git \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-log-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libhyperscan-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                liblz4-dev \
-                llvm-22-dev \
-                make \
-                python3-yaml \
-                rustc \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - run: ./scripts/bundle.sh
@@ -168,7 +131,11 @@ jobs:
   gcc-analyzer:
     name: GCC analyzer
     runs-on: ubuntu-latest
-    container: ubuntu:26.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-26.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Cache scan-build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -176,45 +143,6 @@ jobs:
           path: ~/.cargo
           key: scan-build
 
-      - name: Install system packages
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                cargo \
-                cbindgen \
-                dpdk-dev \
-                gcc-16 \
-                git \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-log-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libnuma-dev \
-                libhiredis-dev \
-                libhyperscan-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                liblz4-dev \
-                make \
-                python3-yaml \
-                rustc \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - run: git config --global --add safe.directory /__w/suricata/suricata
       - run: ./scripts/bundle.sh
