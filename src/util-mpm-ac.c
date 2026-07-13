@@ -614,6 +614,20 @@ static void SCACPrepareStateTable(MpmCtx *mpm_ctx)
 
     /* create the goto table */
     SCACCreateGotoTable(mpm_ctx);
+
+    /* all states exist now, so the goto and output tables can shrink from
+     * the doubling growth size to the exact state count before the delta
+     * table is allocated next to them */
+    if (ctx->allocated_state_count > ctx->state_count) {
+        void *ptmp = SCRealloc(ctx->goto_table, (size_t)ctx->state_count * ctx->single_state_size);
+        if (ptmp != NULL)
+            ctx->goto_table = ptmp;
+        ptmp = SCRealloc(ctx->output_table, (size_t)ctx->state_count * sizeof(SCACOutputTable));
+        if (ptmp != NULL)
+            ctx->output_table = ptmp;
+        ctx->allocated_state_count = ctx->state_count;
+    }
+
     /* create the failure table */
     SCACCreateFailureTable(mpm_ctx);
     /* create the final state(delta) table */
