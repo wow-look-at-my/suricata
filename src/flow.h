@@ -290,6 +290,11 @@ typedef struct FlowCnf_
 {
     uint32_t hash_rand;
     uint32_t hash_size;
+    /** hash_size - 1: valid as bucket index mask only if hash_size_pow2 */
+    uint32_t hash_size_mask;
+    /** true if hash_size is a power of two, allowing masked bucket index
+     *  computation instead of the more expensive modulo */
+    bool hash_size_pow2;
     uint32_t prealloc;
 
     uint32_t timeout_new;
