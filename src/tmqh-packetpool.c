@@ -232,7 +232,14 @@ void PacketPoolReturnPacket(Packet *p)
     }
 }
 
-void PacketPoolInit(void)
+/** \brief initialize the thread's packet pool without preallocating
+ *         any packets
+ *
+ *  For threads that never take packets from their own pool: the pool
+ *  is valid (PacketPoolDestroy works, PacketPoolGetPacket returns
+ *  NULL) but holds no memory.
+ */
+void PacketPoolInitEmpty(void)
 {
     PktPool *my_pool = GetThreadPacketPool();
 
@@ -246,6 +253,11 @@ void PacketPoolInit(void)
     SCCondInit(&my_pool->return_stack.cond, NULL);
     SC_ATOMIC_INIT(my_pool->return_stack.return_threshold);
     SC_ATOMIC_SET(my_pool->return_stack.return_threshold, 32);
+}
+
+void PacketPoolInit(void)
+{
+    PacketPoolInitEmpty();
 
     /* pre allocate packets */
     SCLogDebug("preallocating packets... packet size %" PRIuMAX "",
