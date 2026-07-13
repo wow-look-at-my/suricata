@@ -95,10 +95,8 @@ RB_PROTOTYPE(HTTP_RANGES, HttpRangeContainerBuffer, rb, HttpRangeContainerBuffer
  * for every append in between (we suppose we have many appends per range request)
  */
 typedef struct HttpRangeContainerFile {
-    /** key for hashtable */
+    /** key for hashtable, length in the len field below */
     uint8_t *key;
-    /** key length */
-    uint32_t len;
     /** expire time in epoch */
     SCTime_t expire;
     /** pointer to hashtable data, for locking and use count */
@@ -113,6 +111,8 @@ typedef struct HttpRangeContainerFile {
     FileContainer *files;
     /** red and black tree list of ranges which came out of order */
     struct HTTP_RANGES fragment_tree;
+    /** length of key */
+    uint32_t len;
     /** file flags */
     uint16_t flags;
     /** error condition for this range. Its up to timeout handling to cleanup */
