@@ -91,8 +91,10 @@ impl SMBState {
         &mut self, fuid: &[u8], file_name: &[u8], direction: Direction,
     ) -> Option<&mut SMBTransaction> {
         let mut tx = self.new_tx()?;
-        tx.type_data = Some(SMBTransactionTypeData::FILE(SMBTransactionFile::new()));
-        if let Some(SMBTransactionTypeData::FILE(ref mut d)) = tx.type_data {
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::FILE(
+            SMBTransactionFile::new(),
+        )));
+        if let Some(SMBTransactionTypeData::FILE(d)) = tx.type_data.as_deref_mut() {
             d.direction = direction;
             d.fuid = fuid.to_vec();
             d.file_name = file_name.to_vec();
@@ -122,8 +124,8 @@ impl SMBState {
     ) -> Option<&mut SMBTransaction> {
         let f = fuid.to_vec();
         for tx in &mut self.transactions {
-            let found = match tx.type_data {
-                Some(SMBTransactionTypeData::FILE(ref mut d)) => {
+            let found = match tx.type_data.as_deref() {
+                Some(SMBTransactionTypeData::FILE(d)) => {
                     direction == d.direction && f == d.fuid && !d.file_tracker.is_done()
                 }
                 _ => false,
@@ -131,7 +133,7 @@ impl SMBState {
 
             if found {
                 SCLogDebug!("SMB: Found SMB file TX with ID {}", tx.id);
-                if let Some(SMBTransactionTypeData::FILE(ref mut d)) = tx.type_data {
+                if let Some(SMBTransactionTypeData::FILE(d)) = tx.type_data.as_deref_mut() {
                     tx.tx_data.update_file_flags(self.state_data.file_flags);
                     d.update_file_flags(tx.tx_data.0.file_flags);
                 }
@@ -150,16 +152,14 @@ impl SMBState {
     ) -> Option<&mut SMBTransaction> {
         let f = fuid.to_vec();
         for tx in &mut self.transactions {
-            let found = match tx.type_data {
-                Some(SMBTransactionTypeData::FILE(ref mut d)) => {
-                    direction == d.direction && f == d.fuid
-                }
+            let found = match tx.type_data.as_deref() {
+                Some(SMBTransactionTypeData::FILE(d)) => direction == d.direction && f == d.fuid,
                 _ => false,
             };
 
             if found {
                 SCLogDebug!("SMB: Found SMB file TX with ID {}", tx.id);
-                if let Some(SMBTransactionTypeData::FILE(ref mut d)) = tx.type_data {
+                if let Some(SMBTransactionTypeData::FILE(d)) = tx.type_data.as_deref_mut() {
                     tx.tx_data.update_file_flags(self.state_data.file_flags);
                     d.update_file_flags(tx.tx_data.0.file_flags);
                 }
@@ -212,7 +212,7 @@ impl SMBState {
         // get the tx and update it
         let consumed = match self.get_file_tx_by_fuid(&file_handle, direction) {
             Some(tx) => {
-                if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = tx.type_data {
+                if let Some(SMBTransactionTypeData::FILE(tdf)) = tx.type_data.as_deref_mut() {
                     if ssn_gap {
                         let queued_data = tdf.file_tracker.get_queued_size();
                         if queued_data > 2000000 {
@@ -252,7 +252,7 @@ pub(super) unsafe extern "C" fn smb_gettxfiles(
     tx: *mut std::ffi::c_void, direction: u8,
 ) -> AppLayerGetFileState {
     let tx = cast_pointer!(tx, SMBTransaction);
-    if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = tx.type_data {
+    if let Some(SMBTransactionTypeData::FILE(tdf)) = tx.type_data.as_deref_mut() {
         let tx_dir: u8 = tdf.direction.into();
         if direction & tx_dir != 0 {
             if let Some(sfcm) = { SURICATA_SMB_FILE_CONFIG } {

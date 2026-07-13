@@ -361,9 +361,9 @@ impl SMBState {
     ) -> Option<&mut SMBTransaction> {
         let mut tx = self.new_tx()?;
 
-        tx.type_data = Some(SMBTransactionTypeData::SETFILEPATHINFO(
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::SETFILEPATHINFO(
             SMBTransactionSetFilePathInfo::new(filename, fid, subcmd, loi, delete_on_close),
-        ));
+        )));
         tx.request_done = true;
         tx.response_done = self.tc_trunc; // no response expected if tc is truncated
 
@@ -378,9 +378,9 @@ impl SMBState {
         let mut tx = self.new_tx()?;
 
         let fid: Vec<u8> = Vec::new();
-        tx.type_data = Some(SMBTransactionTypeData::SETFILEPATHINFO(
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::SETFILEPATHINFO(
             SMBTransactionSetFilePathInfo::new(filename, fid, subcmd, loi, delete_on_close),
-        ));
+        )));
         tx.request_done = true;
         tx.response_done = self.tc_trunc; // no response expected if tc is truncated
 
@@ -413,8 +413,8 @@ impl SMBState {
     ) -> Option<&mut SMBTransaction> {
         let mut tx = self.new_tx()?;
 
-        tx.type_data = Some(SMBTransactionTypeData::RENAME(SMBTransactionRename::new(
-            fuid, oldname, newname,
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::RENAME(
+            SMBTransactionRename::new(fuid, oldname, newname),
         )));
         tx.request_done = true;
         tx.response_done = self.tc_trunc; // no response expected if tc is truncated
@@ -511,7 +511,7 @@ pub struct SMBTransaction {
     pub response_done: bool,
 
     /// Command specific data
-    pub type_data: Option<SMBTransactionTypeData>,
+    pub type_data: Option<Box<SMBTransactionTypeData>>,
 
     pub tx_data: AppLayerTxData,
 }
@@ -558,7 +558,7 @@ impl SMBTransaction {
 
 impl Drop for SMBTransaction {
     fn drop(&mut self) {
-        if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = self.type_data {
+        if let Some(SMBTransactionTypeData::FILE(tdf)) = self.type_data.as_deref_mut() {
             if let Some(sfcm) = unsafe { SURICATA_SMB_FILE_CONFIG } {
                 tdf.file_tracker.file.free(sfcm);
             }
@@ -919,7 +919,7 @@ impl SMBState {
                     tx.type_data
                 );
                 /* hack: apply flow file flags to file tx here to make sure its propagated */
-                if let Some(SMBTransactionTypeData::FILE(ref mut d)) = tx.type_data {
+                if let Some(SMBTransactionTypeData::FILE(d)) = tx.type_data.as_deref_mut() {
                     tx.tx_data.update_file_flags(self.state_data.file_flags);
                     d.update_file_flags(tx.tx_data.0.file_flags);
                 }
@@ -1024,9 +1024,9 @@ impl SMBState {
             tx.vercmd.set_smb2_cmd(SMB2_COMMAND_NEGOTIATE_PROTOCOL);
         }
 
-        tx.type_data = Some(SMBTransactionTypeData::NEGOTIATE(
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::NEGOTIATE(
             SMBTransactionNegotiate::new(smb_ver),
-        ));
+        )));
         tx.request_done = true;
         tx.response_done = self.tc_trunc; // no response expected if tc is truncated
 
@@ -1041,8 +1041,8 @@ impl SMBState {
 
     pub fn get_negotiate_tx(&mut self, smb_ver: u8) -> Option<&mut SMBTransaction> {
         for tx in &mut self.transactions {
-            let found = match tx.type_data {
-                Some(SMBTransactionTypeData::NEGOTIATE(ref x)) => x.smb_ver == smb_ver,
+            let found = match tx.type_data.as_deref() {
+                Some(SMBTransactionTypeData::NEGOTIATE(x)) => x.smb_ver == smb_ver,
                 _ => false,
             };
             if found {
@@ -1060,9 +1060,9 @@ impl SMBState {
         let mut tx = self.new_tx()?;
 
         tx.hdr = hdr;
-        tx.type_data = Some(SMBTransactionTypeData::TREECONNECT(
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::TREECONNECT(
             SMBTransactionTreeConnect::new(name.to_vec()),
-        ));
+        )));
         tx.request_done = true;
         tx.response_done = self.tc_trunc; // no response expected if tc is truncated
 
@@ -1078,7 +1078,7 @@ impl SMBState {
     pub fn get_treeconnect_tx(&mut self, hdr: SMBCommonHdr) -> Option<&mut SMBTransaction> {
         for tx in &mut self.transactions {
             let hit = tx.hdr.compare(&hdr)
-                && match tx.type_data {
+                && match tx.type_data.as_deref() {
                     Some(SMBTransactionTypeData::TREECONNECT(_)) => true,
                     _ => false,
                 };
@@ -1096,11 +1096,8 @@ impl SMBState {
     ) -> Option<&mut SMBTransaction> {
         let mut tx = self.new_tx()?;
         tx.hdr = hdr;
-        tx.type_data = Some(SMBTransactionTypeData::CREATE(SMBTransactionCreate::new(
-            file_name.to_vec(),
-            disposition,
-            del,
-            dir,
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::CREATE(
+            SMBTransactionCreate::new(file_name.to_vec(), disposition, del, dir),
         )));
         tx.request_done = true;
         tx.response_done = self.tc_trunc; // no response expected if tc is truncated
@@ -1143,7 +1140,7 @@ impl SMBState {
     fn post_gap_housekeeping_for_files(&mut self) {
         let mut post_gap_txs = false;
         for tx in &mut self.transactions {
-            if let Some(SMBTransactionTypeData::FILE(ref mut f)) = tx.type_data {
+            if let Some(SMBTransactionTypeData::FILE(f)) = tx.type_data.as_deref_mut() {
                 if f.post_gap_ts > 0 {
                     if self.ts > f.post_gap_ts {
                         tx.request_done = true;
@@ -1170,7 +1167,7 @@ impl SMBState {
                     SCLogDebug!("post_gap_housekeeping: done");
                     break;
                 }
-                if let Some(SMBTransactionTypeData::FILE(ref mut f)) = tx.type_data {
+                if let Some(SMBTransactionTypeData::FILE(f)) = tx.type_data.as_deref_mut() {
                     // leaving FILE txs open as they can deal with gaps. We
                     // remove them after 60 seconds of no activity though.
                     if f.post_gap_ts == 0 {
@@ -1188,7 +1185,7 @@ impl SMBState {
                     SCLogDebug!("post_gap_housekeeping: done");
                     break;
                 }
-                if let Some(SMBTransactionTypeData::FILE(ref mut f)) = tx.type_data {
+                if let Some(SMBTransactionTypeData::FILE(f)) = tx.type_data.as_deref_mut() {
                     // leaving FILE txs open as they can deal with gaps. We
                     // remove them after 60 seconds of no activity though.
                     if f.post_gap_ts == 0 {
