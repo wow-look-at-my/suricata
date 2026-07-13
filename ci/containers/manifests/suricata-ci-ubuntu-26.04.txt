@@ -1,0 +1,50 @@
+# suricata-ci-ubuntu-26.04 (FROM ubuntu:26.04)
+#
+# Covers scan-build.yml jobs: scan-build, gcc-analyzer
+#
+# Union of those jobs' apt install steps, replicated verbatim
+# (clang-22/clang-tools-22/llvm-22-dev from scan-build, gcc-16 from
+# gcc-analyzer; libhyperscan-dev is installed by BOTH jobs so it is baked).
+#
+# Note: ubuntu:26.04 is a development-series tag, so identical inputs can
+# produce different images over time. The publish workflow only rebuilds
+# when these files change -- use its workflow_dispatch force_rebuild input
+# to refresh against the moving 26.04 archive.
+libpcre2-dev
+build-essential
+autoconf
+automake
+cargo
+cbindgen
+clang-22
+clang-tools-22
+dpdk-dev
+gcc-16
+git
+libtool
+libpcap-dev
+libnet1-dev
+libyaml-0-2
+libyaml-dev
+libcap-ng-dev
+libcap-ng0
+libmagic-dev
+libnetfilter-log-dev
+libnetfilter-queue-dev
+libnetfilter-queue1
+libnfnetlink-dev
+libnfnetlink0
+libnuma-dev
+libhiredis-dev
+libhyperscan-dev
+libjansson-dev
+libevent-dev
+libevent-pthreads-2.1-7
+liblz4-dev
+llvm-22-dev
+make
+python3-yaml
+rustc
+software-properties-common
+zlib1g
+zlib1g-dev

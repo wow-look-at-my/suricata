@@ -1,0 +1,79 @@
+# suricata-ci-ubuntu-22.04 (FROM ubuntu:22.04)
+#
+# Covers builds.yml jobs:
+#   ubuntu-22-04-debug-validation, ubuntu-22-04-fuzz,
+#   ubuntu-22-04-dpdk-build (all 4 matrix entries), ubuntu-22-04-dist
+#
+# Union of those jobs' apt install steps, replicated verbatim:
+#   - afl/afl-clang from the fuzz job (inert unless CC=afl-clang-fast)
+#   - meson/ninja-build/python3-pyelftools/... from the dpdk-build job's
+#     "Install DPDK dependencies" step; DPDK itself is still compiled from
+#     source per matrix version by the job
+#   - texlive/sphinx/cmake/libssl-dev/libpcre3* from the dist job
+#
+# NOT covered on purpose:
+#   - ubuntu-22-04-minimal-recommended-build: the minimal install script IS
+#     the test; it must keep running on a stock ubuntu:22.04
+#   - ubuntu-22-04-netmap-build: runs on the runner VM (needs
+#     linux-headers-$(uname -r) for the runner kernel)
+afl
+afl-clang
+autoconf
+automake
+build-essential
+cargo
+cmake
+curl
+exuberant-ctags
+git
+hwloc
+jq
+libcap-ng-dev
+libcap-ng0
+libevent-dev
+libevent-pthreads-2.1-7
+libhiredis-dev
+libhwloc-dev
+libjansson-dev
+libjansson4
+liblz4-dev
+liblzma-dev
+libmagic-dev
+libnet1-dev
+libnetfilter-queue-dev
+libnetfilter-queue1
+libnfnetlink-dev
+libnfnetlink0
+libnuma-dev
+libpcap-dev
+libpcre2-dev
+libpcre3
+libpcre3-dbg
+libpcre3-dev
+libpython2.7
+libssl-dev
+libtool
+libyaml-0-2
+libyaml-dev
+make
+meson
+ninja-build
+parallel
+pkg-config
+python3
+python3-pip
+python3-pyelftools
+python3-setuptools
+python3-wheel
+python3-yaml
+rustc
+software-properties-common
+sphinx-common
+sphinx-doc
+sudo
+texlive-fonts-extra
+texlive-fonts-recommended
+texlive-latex-base
+texlive-latex-extra
+zlib1g
+zlib1g-dev

@@ -1,0 +1,49 @@
+# suricata-ci-debian-13 (FROM debian:13)
+#
+# Covers builds.yml job: debian-13 (xdp)
+#
+# Single job, but its apt step is one of the largest in the whole matrix
+# (texlive-fonts-extra alone is over a gigabyte installed), so baking it
+# pays for itself. Package list replicated verbatim from the job.
+autoconf
+automake
+build-essential
+cmake
+cargo
+clang
+dpdk-dev
+git
+hwloc
+libhwloc-dev
+jq
+make
+libpcre2-dev
+libtool
+libpcap-dev
+libnet1-dev
+libyaml-0-2
+libyaml-dev
+libcap-ng-dev
+libcap-ng0
+libmagic-dev
+libmaxminddb-dev
+libjansson-dev
+libjansson4
+libnuma-dev
+liblz4-dev
+libssl-dev
+liblzma-dev
+libvectorscan-dev
+libxdp-dev
+pkg-config
+python3
+python3-yaml
+rustc
+sphinx-doc
+sphinx-common
+texlive-latex-base
+texlive-fonts-recommended
+texlive-fonts-extra
+texlive-latex-extra
+zlib1g
+zlib1g-dev

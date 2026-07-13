@@ -1,0 +1,81 @@
+# suricata-ci-ubuntu-24.04 (FROM ubuntu:24.04)
+#
+# Covers:
+#   builds.yml: ubuntu-24-04 (cocci), ubuntu-24-04-rust-vars,
+#               ubuntu-24-04-cov-ut, ubuntu-24-04-cov-pcapunix,
+#               ubuntu-24-04-cov-afpdpdk, ubuntu-24-04-pcap-unix,
+#               ubuntu-latest-namespace-ips, ubuntu-24-04-asan-afpdpdk,
+#               ubuntu-24-04-cov-fuzz
+#   formatting.yml: check-formatting
+#
+# Union of those jobs' apt install steps, replicated verbatim, EXCEPT
+# libhyperscan-dev, deliberately left out: ./configure auto-detects
+# hyperscan and only 3 of the 10 jobs install it (baking it would switch
+# the MPM used by the other 7). Those 3 jobs (cocci, rust-vars, cov-ut)
+# keep a one-package apt install step instead.
+# dpdk-dev IS baked: DPDK needs an explicit --enable-dpdk, so it is inert
+# for the jobs that did not previously install it.
+# rustup 1.85.1 for the coverage jobs: see suricata-ci-ubuntu-24.04.post.sh.
+autoconf
+automake
+build-essential
+caddy
+cargo
+cargo-1.82
+cbindgen
+clang-14
+clang-18
+clang-19
+clang-format-17
+coccinelle
+curl
+dpdk-dev
+ethtool
+exuberant-ctags
+git
+hping3
+hwloc
+inetutils-ping
+iproute2
+iptables
+jq
+libc++-dev
+libc++abi-dev
+libcap-ng-dev
+libcap-ng0
+libevent-dev
+libevent-pthreads-2.1-7
+libhiredis-dev
+libhwloc-dev
+libjansson-dev
+libmagic-dev
+libnet1-dev
+libnetfilter-queue-dev
+libnetfilter-queue1
+libnfnetlink-dev
+libnfnetlink0
+libnuma-dev
+libpcap-dev
+libpcre2-dev
+libpython3.12
+libtool
+libyaml-0-2
+libyaml-dev
+llvm-14-dev
+llvm-18-dev
+llvm-19-dev
+make
+parallel
+python-is-python3
+python3
+python3-yaml
+rustc
+rustc-1.82
+software-properties-common
+sudo
+time
+tshark
+unzip
+wget
+zlib1g
+zlib1g-dev
