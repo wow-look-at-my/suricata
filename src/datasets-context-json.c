@@ -710,7 +710,8 @@ Dataset *DatajsonGet(const char *name, enum DatasetTypes type, const char *load,
             break;
         case DATASET_TYPE_IPV4:
             set->hash = THashInit(cnf_name, sizeof(IPv4Type), IPv4JsonSet, IPv4JsonFree, IPv4Hash,
-                    IPv4Compare, NULL, IPv4JsonGetLength, load != NULL ? 1 : 0, memcap, hashsize, 0);
+                    IPv4Compare, NULL, IPv4JsonGetLength, load != NULL ? 1 : 0, memcap, hashsize,
+                    0);
             if (set->hash == NULL)
                 goto out_err;
             if (DatajsonLoadIPv4(set, json_key_value, json_array_key, format) < 0)
@@ -718,7 +719,8 @@ Dataset *DatajsonGet(const char *name, enum DatasetTypes type, const char *load,
             break;
         case DATASET_TYPE_IPV6:
             set->hash = THashInit(cnf_name, sizeof(IPv6Type), IPv6JsonSet, IPv6JsonFree, IPv6Hash,
-                    IPv6Compare, NULL, IPv6JsonGetLength, load != NULL ? 1 : 0, memcap, hashsize, 0);
+                    IPv6Compare, NULL, IPv6JsonGetLength, load != NULL ? 1 : 0, memcap, hashsize,
+                    0);
             if (set->hash == NULL)
                 goto out_err;
             if (DatajsonLoadIPv6(set, json_key_value, json_array_key, format) < 0)
