@@ -1,0 +1,106 @@
+# Builds and publishes the prebaked CI dependency images used by
+# builds.yml, rust-checks.yml, scan-build.yml and formatting.yml.
+#
+# All images are built from the single parameterized ci/containers/Dockerfile;
+# per-distro differences live in ci/containers/manifests/<image>.txt (package
+# list) and the optional ci/containers/manifests/<image>.post.sh.
+#
+# Images are tagged twice:
+#   :dep-<hash>  -- <hash> = first 12 hex chars of the sha256 over exactly
+#                   the files that define this image (Dockerfile +
+#                   install-deps.sh + its manifest + its post script if
+#                   any). A build is skipped when this tag already exists
+#                   in the registry, so editing one manifest only rebuilds
+#                   that one image.
+#   :latest      -- what the CI workflows reference.
+#
+# This is a publish workflow, so the path filter is intentional (see the
+# repo CI conventions): it only runs when an image definition or this file
+# changes. Use workflow_dispatch with force_rebuild=true to rebuild against
+# updated distro archives without changing any input file (needed e.g. for
+# the moving ubuntu:26.04 development series).
+name: ci-images
+
+on:
+  push:
+    paths:
+      - "ci/containers/**"
+      - ".github/workflows/ci-images.yml"
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: "Rebuild and push even if the dep-hash tag already exists"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: suricata-ci-almalinux-9
+            base: almalinux:9
+          - image: suricata-ci-debian-11
+            base: debian:11
+          - image: suricata-ci-debian-12
+            base: debian:12
+          - image: suricata-ci-debian-13
+            base: debian:13
+          - image: suricata-ci-fedora-44
+            base: fedora:44
+          - image: suricata-ci-ubuntu-20.04
+            base: ubuntu:20.04
+          - image: suricata-ci-ubuntu-22.04
+            base: ubuntu:22.04
+          - image: suricata-ci-ubuntu-24.04
+            base: ubuntu:24.04
+          - image: suricata-ci-ubuntu-26.04
+            base: ubuntu:26.04
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Compute dependency hash
+        id: dephash
+        run: |
+          files="ci/containers/Dockerfile ci/containers/install-deps.sh ci/containers/manifests/${{ matrix.image }}.txt"
+          if [ -f "ci/containers/manifests/${{ matrix.image }}.post.sh" ]; then
+            files="$files ci/containers/manifests/${{ matrix.image }}.post.sh"
+          fi
+          echo "hash=$(cat $files | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this dep-hash is already published
+        id: exists
+        run: |
+          if [ "${{ inputs.force_rebuild }}" != "true" ] && docker manifest inspect "$IMAGE:dep-${{ steps.dephash.outputs.hash }}" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build image
+        if: steps.exists.outputs.exists != 'true'
+        run: docker build --build-arg BASE_IMAGE=${{ matrix.base }} --build-arg IMAGE_NAME=${{ matrix.image }} -t "$IMAGE:dep-${{ steps.dephash.outputs.hash }}" -t "$IMAGE:latest" ci/containers
+
+      - name: Push dep-hash tag
+        if: steps.exists.outputs.exists != 'true'
+        run: docker push "$IMAGE:dep-${{ steps.dephash.outputs.hash }}"
+
+      - name: Push latest tag
+        if: steps.exists.outputs.exists != 'true'
+        run: docker push "$IMAGE:latest"

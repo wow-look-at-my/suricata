@@ -1,0 +1,41 @@
+# suricata-ci-debian-11 (FROM debian:11)
+#
+# Covers builds.yml job: debian-11
+#
+# Single job; package list replicated verbatim from the job's apt step.
+# The per-run apt installs on debian:11 have been hitting Debian archive
+# CDN connection resets lately, so baking them also removes a recurring
+# flake, not just install time.
+# rustup toolchain (RUST_VERSION_KNOWN): see suricata-ci-debian-11.post.sh.
+automake
+autoconf
+build-essential
+ccache
+curl
+git
+hwloc
+libhwloc-dev
+jq
+libpcre2-dev
+libpcap-dev
+libnet1-dev
+libyaml-0-2
+libyaml-dev
+libcap-ng-dev
+libcap-ng0
+libmagic-dev
+libjansson-dev
+libgeoip-dev
+libhiredis-dev
+libevent-dev
+libtool
+m4
+make
+python3-yaml
+pkg-config
+sudo
+zlib1g
+zlib1g-dev
+clang
+libbpf-dev
+libelf-dev
