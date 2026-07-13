@@ -632,7 +632,10 @@ impl HTTP2Transaction {
                 if padded && !rem.is_empty() && usize::from(rem[0]) < hlsafe {
                     dinput = &rem[1..hlsafe - usize::from(rem[0])];
                 }
-                let mut output = Vec::with_capacity(decompression::HTTP2_DECOMPRESSION_CHUNK_SIZE);
+                // Allocation is left to the decompressor: it resizes
+                // output to its chunk size on first use, and no buffer
+                // is needed at all without an assigned decompressor.
+                let mut output = Vec::new();
                 match self.decompress(dinput, &mut output, dir, sfcm, over, flow) {
                     Ok(_) => {
                         if over {
