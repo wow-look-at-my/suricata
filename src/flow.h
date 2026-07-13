@@ -398,6 +398,15 @@ typedef struct Flow_
     /** Incoming interface */
     uint16_t livedev_id;
 
+    /* unlike the lookup fields above, flow_state and tenant_id are not
+     * static: they are written under the flow lock. They live here to
+     * fill the alignment hole before 'next'. */
+    FlowStateType flow_state;
+
+    /** flow tenant id, used to setup flow timeout and stream pseudo
+     *  packets with the correct tenant id set */
+    uint32_t tenant_id;
+
     struct Flow_ *next; /* (hash) list next */
 
     uint64_t flags; /**< generic flags */
@@ -416,12 +425,6 @@ typedef struct Flow_
      *  flow and flow hash row locks, safe to read under either the
      *  flow lock or flow hash row lock. */
     SCTime_t lastts;
-
-    FlowStateType flow_state;
-
-    /** flow tenant id, used to setup flow timeout and stream pseudo
-     *  packets with the correct tenant id set */
-    uint32_t tenant_id;
 
     uint32_t probing_parser_toserver_alproto_masks;
     uint32_t probing_parser_toclient_alproto_masks;
