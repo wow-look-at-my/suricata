@@ -63,12 +63,18 @@ fi
 
 # Generic sanity check, tools every image must provide. Post scripts add
 # image-specific checks (rustup toolchains, pinned clang versions, ...).
+#
+# libtool is checked via libtoolize: on Debian/Ubuntu the libtool PACKAGE
+# (what the workflows install) ships only libtoolize -- the libtool binary
+# lives in libtool-bin, which CI never installed. autogen.sh needs exactly
+# libtoolize, and the rpm libtool package provides it too, so this one
+# check works on every image.
 echo "--- sanity check"
 set -x
 gcc --version
 make --version
 autoconf --version
 automake --version
-libtool --version
+libtoolize --version
 git --version
 python3 --version
