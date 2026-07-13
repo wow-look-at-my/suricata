@@ -1157,7 +1157,10 @@ uint32_t SCACTileSearchLarge(const SCACTileSearchCtx *ctx, MpmThreadCtx *mpm_thr
     int matches = 0;
 
     uint8_t *mpm_bitarray = (uint8_t *)mpm_thread_ctx->ctx;
-    memset(mpm_bitarray, 0, mpm_thread_ctx->memory_size);
+    /* the thread bitarray is sized for the largest mpm ctx in the engine,
+     * but this search only touches bits for its own ctx's pattern indexes,
+     * all below mpm_bitarray_size */
+    memset(mpm_bitarray, 0, ctx->mpm_bitarray_size);
 
     const uint8_t* restrict xlate = ctx->translate_table;
     register int state = 0;
