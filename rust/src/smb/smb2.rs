@@ -167,7 +167,7 @@ pub fn smb2_read_response_record(state: &mut SMBState, r: &Smb2Record, nbss_rema
             let found = if let Some(tx) =
                 state.get_file_tx_by_fuid_with_open_file(&file_guid, Direction::ToClient)
             {
-                if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = tx.type_data {
+                if let Some(SMBTransactionTypeData::FILE(tdf)) = tx.type_data.as_deref_mut() {
                     let file_id: u32 = tx.id as u32;
                     if offset < tdf.file_tracker.tracked {
                         set_event_fileoverlap = true;
@@ -258,7 +258,7 @@ pub fn smb2_read_response_record(state: &mut SMBState, r: &Smb2Record, nbss_rema
                     };
                     tx.vercmd.set_smb2_cmd(SMB2_COMMAND_READ);
                     tx.hdr = SMBCommonHdr::new(SMBHDR_TYPE_HEADER, r.session_id, r.tree_id, 0); // TODO move into new_file_tx
-                    if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = tx.type_data {
+                    if let Some(SMBTransactionTypeData::FILE(tdf)) = tx.type_data.as_deref_mut() {
                         tdf.share_name = share_name;
                         let file_id: u32 = tx.id as u32;
                         if offset < tdf.file_tracker.tracked {
@@ -350,7 +350,7 @@ pub fn smb2_write_request_record(state: &mut SMBState, r: &Smb2Record, nbss_rema
             let found = if let Some(tx) =
                 state.get_file_tx_by_fuid_with_open_file(&file_guid, Direction::ToServer)
             {
-                if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = tx.type_data {
+                if let Some(SMBTransactionTypeData::FILE(tdf)) = tx.type_data.as_deref_mut() {
                     let file_id: u32 = tx.id as u32;
                     if wr.wr_offset < tdf.file_tracker.tracked {
                         set_event_fileoverlap = true;
@@ -437,7 +437,7 @@ pub fn smb2_write_request_record(state: &mut SMBState, r: &Smb2Record, nbss_rema
                     };
                     tx.vercmd.set_smb2_cmd(SMB2_COMMAND_WRITE);
                     tx.hdr = SMBCommonHdr::new(SMBHDR_TYPE_HEADER, r.session_id, r.tree_id, 0); // TODO move into new_file_tx
-                    if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = tx.type_data {
+                    if let Some(SMBTransactionTypeData::FILE(tdf)) = tx.type_data.as_deref_mut() {
                         let file_id: u32 = tx.id as u32;
                         if wr.wr_offset < tdf.file_tracker.tracked {
                             set_event_fileoverlap = true;
@@ -591,7 +591,9 @@ pub fn smb2_request_record(state: &mut SMBState, r: &Smb2Record) {
                     let Some(tx) = state.new_negotiate_tx(2) else {
                         return;
                     };
-                    if let Some(SMBTransactionTypeData::NEGOTIATE(ref mut tdn)) = tx.type_data {
+                    if let Some(SMBTransactionTypeData::NEGOTIATE(tdn)) =
+                        tx.type_data.as_deref_mut()
+                    {
                         tdn.dialects2 = dialects;
                         tdn.client_guid = Some(rd.client_guid.to_vec());
                     }
@@ -681,34 +683,38 @@ pub fn smb2_request_record(state: &mut SMBState, r: &Smb2Record) {
             if let Ok((_, cd)) = parse_smb2_request_close(r.data) {
                 let _name = state.guid2name_cache.pop(cd.guid);
 
-                let found_ts =
-                    if let Some(tx) = state.get_file_tx_by_fuid(cd.guid, Direction::ToServer) {
-                        if !tx.request_done {
-                            if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = tx.type_data {
-                                filetracker_close(&mut tdf.file_tracker);
-                            }
+                let found_ts = if let Some(tx) =
+                    state.get_file_tx_by_fuid(cd.guid, Direction::ToServer)
+                {
+                    if !tx.request_done {
+                        if let Some(SMBTransactionTypeData::FILE(tdf)) = tx.type_data.as_deref_mut()
+                        {
+                            filetracker_close(&mut tdf.file_tracker);
                         }
-                        tx.request_done = true;
-                        tx.response_done = true;
-                        tx.set_status(SMB_NTSTATUS_SUCCESS, false);
-                        true
-                    } else {
-                        false
-                    };
-                let found_tc =
-                    if let Some(tx) = state.get_file_tx_by_fuid(cd.guid, Direction::ToClient) {
-                        if !tx.request_done {
-                            if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = tx.type_data {
-                                filetracker_close(&mut tdf.file_tracker);
-                            }
+                    }
+                    tx.request_done = true;
+                    tx.response_done = true;
+                    tx.set_status(SMB_NTSTATUS_SUCCESS, false);
+                    true
+                } else {
+                    false
+                };
+                let found_tc = if let Some(tx) =
+                    state.get_file_tx_by_fuid(cd.guid, Direction::ToClient)
+                {
+                    if !tx.request_done {
+                        if let Some(SMBTransactionTypeData::FILE(tdf)) = tx.type_data.as_deref_mut()
+                        {
+                            filetracker_close(&mut tdf.file_tracker);
                         }
-                        tx.request_done = true;
-                        tx.response_done = true;
-                        tx.set_status(SMB_NTSTATUS_SUCCESS, false);
-                        true
-                    } else {
-                        false
-                    };
+                    }
+                    tx.request_done = true;
+                    tx.response_done = true;
+                    tx.set_status(SMB_NTSTATUS_SUCCESS, false);
+                    true
+                } else {
+                    false
+                };
                 if !found_ts && !found_tc {
                     SCLogDebug!("SMBv2: CLOSE(TS): no TX at GUID {:?}", cd.guid);
                 }
@@ -789,7 +795,8 @@ pub fn smb2_response_record(state: &mut SMBState, r: &Smb2Record) {
                 };
                 if let Some(tx) = state.get_file_tx_by_fuid(&file_guid, Direction::ToClient) {
                     if !tx.request_done {
-                        if let Some(SMBTransactionTypeData::FILE(ref mut tdf)) = tx.type_data {
+                        if let Some(SMBTransactionTypeData::FILE(tdf)) = tx.type_data.as_deref_mut()
+                        {
                             filetracker_close(&mut tdf.file_tracker);
                         }
                     }
@@ -825,7 +832,9 @@ pub fn smb2_response_record(state: &mut SMBState, r: &Smb2Record) {
                         tx.set_status(r.nt_status, false);
                         tx.response_done = true;
 
-                        if let Some(SMBTransactionTypeData::CREATE(ref mut tdn)) = tx.type_data {
+                        if let Some(SMBTransactionTypeData::CREATE(tdn)) =
+                            tx.type_data.as_deref_mut()
+                        {
                             tdn.create_ts = cr.create_ts.as_unix();
                             tdn.last_access_ts = cr.last_access_ts.as_unix();
                             tdn.last_write_ts = cr.last_write_ts.as_unix();
@@ -857,8 +866,8 @@ pub fn smb2_response_record(state: &mut SMBState, r: &Smb2Record) {
                     let is_pipe = tr.share_type == 2;
                     let found = match state.get_treeconnect_tx(name_key) {
                         Some(tx) => {
-                            if let Some(SMBTransactionTypeData::TREECONNECT(ref mut tdn)) =
-                                tx.type_data
+                            if let Some(SMBTransactionTypeData::TREECONNECT(tdn)) =
+                                tx.type_data.as_deref_mut()
                             {
                                 tdn.share_type = tr.share_type;
                                 tdn.is_pipe = is_pipe;
@@ -918,7 +927,9 @@ pub fn smb2_response_record(state: &mut SMBState, r: &Smb2Record) {
 
                 let found2 = match state.get_negotiate_tx(2) {
                     Some(tx) => {
-                        if let Some(SMBTransactionTypeData::NEGOTIATE(ref mut tdn)) = tx.type_data {
+                        if let Some(SMBTransactionTypeData::NEGOTIATE(tdn)) =
+                            tx.type_data.as_deref_mut()
+                        {
                             tdn.server_guid = rd.server_guid.to_vec();
                         }
                         tx.set_status(r.nt_status, false);
@@ -931,8 +942,8 @@ pub fn smb2_response_record(state: &mut SMBState, r: &Smb2Record) {
                 let found1 = !found2
                     && match state.get_negotiate_tx(1) {
                         Some(tx) => {
-                            if let Some(SMBTransactionTypeData::NEGOTIATE(ref mut tdn)) =
-                                tx.type_data
+                            if let Some(SMBTransactionTypeData::NEGOTIATE(tdn)) =
+                                tx.type_data.as_deref_mut()
                             {
                                 tdn.server_guid = rd.server_guid.to_vec();
                             }

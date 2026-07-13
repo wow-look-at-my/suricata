@@ -62,5 +62,6 @@ int DetectPcrePayloadMatch(DetectEngineThreadCtx *,
         Packet *, Flow *, const uint8_t *, uint32_t);
 
 void DetectPcreRegister (void);
+void DetectPcreFreeContexts(void);
 
 #endif /* SURICATA_DETECT_PCRE_H */

@@ -23,7 +23,6 @@ use crate::smb::events::*;
 use crate::smb::smb::{cfg_max_stub_size, *};
 use crate::smb::smb2::*;
 use crate::smb::smb_status::*;
-use uuid;
 
 impl SMBCommonHdr {
     /// helper for DCERPC tx tracking. Check if we need
@@ -130,9 +129,9 @@ impl SMBState {
         let mut tx = self.new_tx()?;
         tx.hdr = hdr;
         tx.vercmd = vercmd;
-        tx.type_data = Some(SMBTransactionTypeData::DCERPC(
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::DCERPC(
             SMBTransactionDCERPC::new_request(cmd, call_id),
-        ));
+        )));
 
         SCLogDebug!("SMB: TX DCERPC created: ID {} hdr {:?}", tx.id, tx.hdr);
         self.transactions.push_back(tx);
@@ -145,9 +144,9 @@ impl SMBState {
         let mut tx = self.new_tx()?;
         tx.hdr = hdr;
         tx.vercmd = vercmd;
-        tx.type_data = Some(SMBTransactionTypeData::DCERPC(
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::DCERPC(
             SMBTransactionDCERPC::new_response(call_id),
-        ));
+        )));
 
         SCLogDebug!("SMB: TX DCERPC created: ID {} hdr {:?}", tx.id, tx.hdr);
         self.transactions.push_back(tx);
@@ -162,8 +161,8 @@ impl SMBState {
         SCLogDebug!("looking for {:?}", dce_hdr);
         for tx in &mut self.transactions {
             let found = dce_hdr.compare(&tx.hdr.to_dcerpc(vercmd))
-                && match tx.type_data {
-                    Some(SMBTransactionTypeData::DCERPC(ref x)) => x.call_id == call_id,
+                && match tx.type_data.as_deref() {
+                    Some(SMBTransactionTypeData::DCERPC(x)) => x.call_id == call_id,
                     _ => false,
                 };
             if found {
@@ -210,8 +209,8 @@ pub fn smb_write_dcerpc_record(
                                     tx.id,
                                     tx
                                 );
-                                if let Some(SMBTransactionTypeData::DCERPC(ref mut tdn)) =
-                                    tx.type_data
+                                if let Some(SMBTransactionTypeData::DCERPC(tdn)) =
+                                    tx.type_data.as_deref_mut()
                                 {
                                     tdn.frag_cnt_ts = tdn.frag_cnt_ts.saturating_add(1);
                                     let max_size = cfg_max_stub_size() as usize;
@@ -258,7 +257,8 @@ pub fn smb_write_dcerpc_record(
                     {
                         Ok((_, recr)) => {
                             SCLogDebug!("DCERPC: REQUEST {:?}", recr);
-                            if let Some(SMBTransactionTypeData::DCERPC(ref mut tdn)) = tx.type_data
+                            if let Some(SMBTransactionTypeData::DCERPC(tdn)) =
+                                tx.type_data.as_deref_mut()
                             {
                                 SCLogDebug!("first frag size {}", recr.data.len());
                                 tdn.opnum = recr.opnum;
@@ -328,18 +328,16 @@ pub fn smb_write_dcerpc_record(
                                     } else {
                                         i.iface.to_vec()
                                     };
-                                    let uuid_str = uuid::Uuid::from_slice(&x.clone());
-                                    let _uuid_str = uuid_str
-                                        .map(|uuid_str| uuid_str.to_hyphenated().to_string())
-                                        .unwrap();
-                                    let d = DCERPCIface::new(x, i.ver, i.ver_min, i.ctx_id);
                                     SCLogDebug!(
                                         "UUID {} version {}/{} bytes {:?}",
-                                        _uuid_str,
+                                        uuid::Uuid::from_slice(&x)
+                                            .map(|uuid_str| uuid_str.to_hyphenated().to_string())
+                                            .unwrap(),
                                         i.ver,
                                         i.ver_min,
                                         i.iface
                                     );
+                                    let d = DCERPCIface::new(x, i.ver, i.ver_min, i.ctx_id);
                                     ifaces.push(d);
                                 }
                                 bind_ifaces = Some(ifaces);
@@ -388,7 +386,7 @@ fn smb_dcerpc_response_bindack(
 
             let found = match state.get_dcerpc_tx(&hdr, &vercmd, dcer.call_id) {
                 Some(tx) => {
-                    if let Some(SMBTransactionTypeData::DCERPC(ref mut tdn)) = tx.type_data {
+                    if let Some(SMBTransactionTypeData::DCERPC(tdn)) = tx.type_data.as_deref_mut() {
                         tdn.set_result(DCERPC_TYPE_BINDACK);
                     }
                     tx.vercmd.set_ntstatus(ntstatus);
@@ -449,7 +447,7 @@ fn dcerpc_response_handle(tx: &mut SMBTransaction, vercmd: SMBVerCmdStat, dcer: 
         DCERPC_TYPE_RESPONSE => match parse_dcerpc_response_record(dcer.data, dcer.frag_len) {
             Ok((_, respr)) => {
                 SCLogDebug!("SMBv1 READ RESPONSE {:?}", respr);
-                if let Some(SMBTransactionTypeData::DCERPC(ref mut tdn)) = tx.type_data {
+                if let Some(SMBTransactionTypeData::DCERPC(tdn)) = tx.type_data.as_deref_mut() {
                     SCLogDebug!("CMD 11 found at tx {}", tx.id);
                     tdn.set_result(DCERPC_TYPE_RESPONSE);
                     let max_size = cfg_max_stub_size() as usize;
@@ -472,7 +470,7 @@ fn dcerpc_response_handle(tx: &mut SMBTransaction, vercmd: SMBVerCmdStat, dcer: 
             // handled elsewhere
         }
         21..=255 => {
-            if let Some(SMBTransactionTypeData::DCERPC(ref mut tdn)) = tx.type_data {
+            if let Some(SMBTransactionTypeData::DCERPC(tdn)) = tx.type_data.as_deref_mut() {
                 tdn.set_result(dcer.packet_type);
             }
             tx.vercmd.set_ntstatus(ntstatus);
@@ -481,7 +479,7 @@ fn dcerpc_response_handle(tx: &mut SMBTransaction, vercmd: SMBVerCmdStat, dcer: 
         }
         _ => {
             // valid type w/o special processing
-            if let Some(SMBTransactionTypeData::DCERPC(ref mut tdn)) = tx.type_data {
+            if let Some(SMBTransactionTypeData::DCERPC(tdn)) = tx.type_data.as_deref_mut() {
                 tdn.set_result(dcer.packet_type);
             }
             tx.vercmd.set_ntstatus(ntstatus);

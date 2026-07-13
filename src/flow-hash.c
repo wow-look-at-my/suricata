@@ -873,6 +873,20 @@ static inline uint16_t GetTvId(const ThreadVars *tv)
     return tv_id;
 }
 
+/** \brief bucket index for a flow hash value
+ *
+ *  With the (default) power of two hash table size the modulo reduces
+ *  to a mask, avoiding a per packet hardware division. The result is
+ *  identical to 'hash % flow_config.hash_size' for every input.
+ */
+static inline uint32_t FlowBucketIndex(const uint32_t hash)
+{
+    if (likely(flow_config.hash_size_pow2)) {
+        return hash & flow_config.hash_size_mask;
+    }
+    return hash % flow_config.hash_size;
+}
+
 /** \brief Get Flow for packet
  *
  * Hash retrieval function for flows. Looks up the hash bucket containing the
@@ -896,7 +910,7 @@ Flow *FlowGetFlowFromHash(ThreadVars *tv, FlowLookupStruct *fls, Packet *p, Flow
 
     /* get our hash bucket and lock it */
     const uint32_t hash = p->flow_hash;
-    FlowBucket *fb = &flow_hash[hash % flow_config.hash_size];
+    FlowBucket *fb = &flow_hash[FlowBucketIndex(hash)];
     FBLOCK_LOCK(fb);
 
     SCLogDebug("fb %p fb->head %p", fb, fb->head);
@@ -1023,7 +1037,7 @@ static inline bool FlowCompareKey(Flow *f, FlowKey *key)
 Flow *FlowGetExistingFlowFromFlowId(uint64_t flow_id)
 {
     uint32_t hash = flow_id & 0x0000FFFF;
-    FlowBucket *fb = &flow_hash[hash % flow_config.hash_size];
+    FlowBucket *fb = &flow_hash[FlowBucketIndex(hash)];
     FBLOCK_LOCK(fb);
     SCLogDebug("fb %p fb->head %p", fb, fb->head);
 
@@ -1052,7 +1066,7 @@ Flow *FlowGetExistingFlowFromFlowId(uint64_t flow_id)
 static Flow *FlowGetExistingFlowFromHash(FlowKey *key, const uint32_t hash)
 {
     /* get our hash bucket and lock it */
-    FlowBucket *fb = &flow_hash[hash % flow_config.hash_size];
+    FlowBucket *fb = &flow_hash[FlowBucketIndex(hash)];
     FBLOCK_LOCK(fb);
     SCLogDebug("fb %p fb->head %p", fb, fb->head);
 
@@ -1125,7 +1139,7 @@ Flow *FlowGetFromFlowKey(FlowKey *key, struct timespec *ttime, const uint32_t ha
     f->startts = SCTIME_FROM_TIMESPEC(ttime);
     f->lastts = f->startts;
 
-    FlowBucket *fb = &flow_hash[hash % flow_config.hash_size];
+    FlowBucket *fb = &flow_hash[FlowBucketIndex(hash)];
     FBLOCK_LOCK(fb);
     f->fb = fb;
     f->next = fb->head;
@@ -1211,7 +1225,7 @@ static inline bool StillAlive(const Flow *f, const SCTime_t ts)
  */
 static Flow *FlowGetUsedFlow(ThreadVars *tv, DecodeThreadVars *dtv, const SCTime_t ts)
 {
-    uint32_t idx = GetUsedAtomicUpdate(FLOW_GET_NEW_TRIES) % flow_config.hash_size;
+    uint32_t idx = FlowBucketIndex(GetUsedAtomicUpdate(FLOW_GET_NEW_TRIES));
     uint32_t tried = 0;
 
     while (1) {

@@ -1646,19 +1646,9 @@ void *SMTPStateAlloc(void *orig_state, AppProto proto_orig)
     if (unlikely(smtp_state == NULL))
         return NULL;
 
-    smtp_state->cmds = SCMalloc(sizeof(uint8_t) *
-                                SMTP_COMMAND_BUFFER_STEPS);
-    if (smtp_state->cmds == NULL) {
-        SCFree(smtp_state);
-        return NULL;
-    }
-    smtp_state->cmds_tx_ids = SCMalloc(sizeof(uint64_t) * SMTP_COMMAND_BUFFER_STEPS);
-    if (smtp_state->cmds_tx_ids == NULL) {
-        SCFree(smtp_state->cmds);
-        SCFree(smtp_state);
-        return NULL;
-    }
-    smtp_state->cmds_buffer_len = SMTP_COMMAND_BUFFER_STEPS;
+    /* the command buffers (cmds, cmds_tx_ids) start out empty; the grow
+     * path in SMTPInsertCommandIntoCommandBuffer() does the first
+     * allocation when a command is buffered */
 
     TAILQ_INIT(&smtp_state->tx_list);
 

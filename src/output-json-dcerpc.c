@@ -46,7 +46,6 @@ static int JsonDCERPCLogger(ThreadVars *tv, void *thread_data,
     }
     SCJbClose(jb);
 
-    MemBufferReset(thread->buffer);
     OutputJsonBuilderBuffer(tv, p, p->flow, jb, thread);
 
     SCJbFree(jb);

@@ -293,8 +293,10 @@ static int DetectFilestoreMatch (DetectEngineThreadCtx *det_ctx, Flow *f,
      * matches. */
     if (file != NULL) {
         file_id = file->file_track_id;
-        if (file->sid != NULL && s->id > 0) {
+        if (s->id > 0) {
             if (file->sid_cnt >= file->sid_max) {
+                /* this also does the initial allocation, as files start
+                 * out without a sid array */
                 void *p = SCRealloc(file->sid, sizeof(uint32_t) * (file->sid_max + 8));
                 if (p == NULL) {
                     SCFree(file->sid);

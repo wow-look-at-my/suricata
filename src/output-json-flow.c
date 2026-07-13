@@ -434,9 +434,6 @@ static int JsonFlowLogger(ThreadVars *tv, void *thread_data, Flow *f)
     SCEnter();
     OutputJsonThreadCtx *thread = thread_data;
 
-    /* reset */
-    MemBufferReset(thread->buffer);
-
     SCJsonBuilder *jb = CreateEveHeaderFromFlow(f, &thread->ctx->cfg);
     if (unlikely(jb == NULL)) {
         SCReturnInt(TM_ECODE_OK);

@@ -553,12 +553,9 @@ static File *FileAlloc(const uint8_t *name, uint16_t name_len)
     new->name_len = name_len;
     memcpy(new->name, name, name_len);
 
-    new->sid_cnt = 0;
-    new->sid_max = 8;
-    /* SCMalloc() is allowed to fail here because sid well be checked later on */
-    new->sid = SCMalloc(sizeof(uint32_t) * new->sid_max);
-    if (new->sid == NULL)
-        new->sid_max = 0;
+    /* new->sid is allocated on demand when a filestore rule stores a
+     * sid with the file, see detect-filestore.c. The struct is calloc'd,
+     * so sid, sid_cnt and sid_max start out zeroed. */
 
     return new;
 }

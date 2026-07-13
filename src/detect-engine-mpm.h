@@ -55,6 +55,7 @@ void RetrieveFPForSig(const DetectEngineCtx *de_ctx, Signature *s);
 
 int MpmStoreInit(DetectEngineCtx *);
 void MpmStoreFree(DetectEngineCtx *);
+void MpmStoreFreeSidArrays(DetectEngineCtx *de_ctx);
 void MpmStoreReportStats(const DetectEngineCtx *de_ctx);
 MpmStore *MpmStorePrepareBuffer(DetectEngineCtx *de_ctx, SigGroupHead *sgh, enum MpmBuiltinBuffers buf);
 

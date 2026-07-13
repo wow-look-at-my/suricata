@@ -69,6 +69,14 @@
 static int pcre_match_limit = 0;
 static int pcre_match_limit_recursion = 0;
 
+/* match contexts shared by all pcre rules. pcre2_match only reads the
+ * context, so a context can be shared by all rules and threads: one
+ * carries the built-in match limits, the other the limits from the
+ * config, used by rules with the 'O' flag. Set up in
+ * DetectPcreRegister, freed at shutdown by DetectPcreFreeContexts. */
+static pcre2_match_context *pcre2_default_limits_context = NULL;
+static pcre2_match_context *pcre2_config_limits_context = NULL;
+
 static DetectParseRegex *parse_regex;
 static DetectParseRegex *parse_capture_regex;
 
@@ -136,6 +144,29 @@ void DetectPcreRegister (void)
         }
     }
 
+    if (pcre2_default_limits_context == NULL) {
+        pcre2_default_limits_context = pcre2_match_context_create(NULL);
+        if (pcre2_default_limits_context == NULL) {
+            FatalError("pcre2 could not create match context");
+        }
+    }
+    pcre2_set_match_limit(pcre2_default_limits_context, SC_MATCH_LIMIT_DEFAULT);
+    pcre2_set_recursion_limit(pcre2_default_limits_context, SC_MATCH_LIMIT_RECURSION_DEFAULT);
+
+    if (pcre2_config_limits_context == NULL) {
+        pcre2_config_limits_context = pcre2_match_context_create(NULL);
+        if (pcre2_config_limits_context == NULL) {
+            FatalError("pcre2 could not create match context");
+        }
+    }
+    if (pcre_match_limit >= -1) {
+        pcre2_set_match_limit(pcre2_config_limits_context, pcre_match_limit);
+    }
+    if (pcre_match_limit_recursion >= -1) {
+        // pcre2_set_depth_limit unsupported on ubuntu 16.04
+        pcre2_set_recursion_limit(pcre2_config_limits_context, pcre_match_limit_recursion);
+    }
+
     parse_regex = DetectSetupPCRE2(PARSE_REGEX, 0);
     if (parse_regex == NULL) {
         FatalError("pcre2 compile failed for parse_regex");
@@ -154,6 +185,15 @@ void DetectPcreRegister (void)
         pcre2_use_jit = 0;
     }
 #endif
+}
+
+/** \brief free the match contexts shared by all pcre rules */
+void DetectPcreFreeContexts(void)
+{
+    pcre2_match_context_free(pcre2_default_limits_context);
+    pcre2_default_limits_context = NULL;
+    pcre2_match_context_free(pcre2_config_limits_context);
+    pcre2_config_limits_context = NULL;
 }
 
 static void DetectAlertStoreMatch(DetectEngineThreadCtx *det_ctx, const Signature *s, uint32_t idx,
@@ -753,23 +793,13 @@ static DetectPcreData *DetectPcreParse (DetectEngineCtx *de_ctx,
     }
 #endif /*PCRE2_HAVE_JIT*/
 
-    pd->parse_regex.context = pcre2_match_context_create(NULL);
+    /* all rules share the two limit-carrying match contexts set up at
+     * registration */
+    pd->parse_regex.context =
+            apply_match_limit ? pcre2_config_limits_context : pcre2_default_limits_context;
     if (pd->parse_regex.context == NULL) {
-        SCLogError("pcre2 could not create match context");
+        SCLogError("pcre2 match contexts not initialized");
         goto error;
-    }
-
-    if (apply_match_limit) {
-        if (pcre_match_limit >= -1) {
-            pcre2_set_match_limit(pd->parse_regex.context, pcre_match_limit);
-        }
-        if (pcre_match_limit_recursion >= -1) {
-            // pcre2_set_depth_limit unsupported on ubuntu 16.04
-            pcre2_set_recursion_limit(pd->parse_regex.context, pcre_match_limit_recursion);
-        }
-    } else {
-        pcre2_set_match_limit(pd->parse_regex.context, SC_MATCH_LIMIT_DEFAULT);
-        pcre2_set_recursion_limit(pd->parse_regex.context, SC_MATCH_LIMIT_RECURSION_DEFAULT);
     }
 
     pcre2_match_data_free(match);
@@ -918,7 +948,7 @@ static int DetectPcreParseCapture(const char *regexstr, DetectEngineCtx *de_ctx,
         if (strcmp(type_str, "pkt") == 0) {
             uint32_t varname_id = VarNameStoreRegister((char *)capture_str, VAR_TYPE_PKT_VAR);
             if (unlikely(varname_id == 0))
-                return -1;
+                goto error;
             pd->capids[pd->idx] = varname_id;
             pd->captypes[pd->idx] = VAR_TYPE_PKT_VAR;
             SCLogDebug("id %u type %u", pd->capids[pd->idx], pd->captypes[pd->idx]);
@@ -926,14 +956,14 @@ static int DetectPcreParseCapture(const char *regexstr, DetectEngineCtx *de_ctx,
         } else if (strcmp(type_str, "flow") == 0) {
             uint32_t varname_id = VarNameStoreRegister((char *)capture_str, VAR_TYPE_FLOW_VAR);
             if (unlikely(varname_id == 0))
-                return -1;
+                goto error;
             pd->capids[pd->idx] = varname_id;
             pd->captypes[pd->idx] = VAR_TYPE_FLOW_VAR;
             pd->idx++;
         } else if (strcmp(type_str, "alert") == 0) {
             uint32_t varname_id = VarNameStoreRegister((char *)capture_str, VAR_TYPE_ALERT_VAR);
             if (unlikely(varname_id == 0))
-                return -1;
+                goto error;
             pd->capids[pd->idx] = varname_id;
             pd->captypes[pd->idx] = VAR_TYPE_ALERT_VAR;
             pd->idx++;
@@ -1074,6 +1104,8 @@ static void DetectPcreFree(DetectEngineCtx *de_ctx, void *ptr)
         return;
 
     DetectPcreData *pd = (DetectPcreData *)ptr;
+    /* the match context is shared by all rules, not owned by this one */
+    pd->parse_regex.context = NULL;
     DetectParseFreeRegex(&pd->parse_regex);
     DetectUnregisterThreadCtxFuncs(de_ctx, pd, "pcre");
 

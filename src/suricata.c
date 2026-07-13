@@ -50,6 +50,7 @@
 
 #include "detect.h"
 #include "detect-parse.h"
+#include "detect-pcre.h"
 #include "detect-engine.h"
 #include "detect-engine-address.h"
 #include "detect-engine-alert.h"
@@ -463,6 +464,7 @@ void GlobalsDestroy(void)
     SCConfDeInit();
 
     DetectParseFreeRegexes();
+    DetectPcreFreeContexts();
 
     SCPidfileRemove(suri->pid_filename);
     SCFree(suri->pid_filename);
@@ -3165,6 +3167,14 @@ void SuricataInit(void)
     }
 
     PreRunPostPrivsDropInit(suricata.run_mode);
+
+    if (suricata.run_mode != RUNMODE_UNIX_SOCKET) {
+        /* all outputs are set up now, so it is known whether any of them
+         * needs the original rule text at runtime. In unix socket mode
+         * outputs are set up per run, after the engine, so the rule text
+         * is always kept there. */
+        DetectEngineEnableSigStrFree();
+    }
 
     SCOnLoggingReady();
 

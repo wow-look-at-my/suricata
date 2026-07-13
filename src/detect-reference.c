@@ -77,7 +77,7 @@ void DetectReferenceFree(DetectReference *ref)
 {
     SCEnter();
 
-    if (ref->key)
+    if (ref->key && !ref->key_borrowed)
         SCFree(ref->key);
 
     if (ref->reference != NULL) {
@@ -162,10 +162,10 @@ static DetectReference *DetectReferenceParse(const char *rawstr, DetectEngineCtx
 
         SCRConfReference *lookup_ref_conf = SCRConfGetReference(key, de_ctx);
         if (lookup_ref_conf != NULL) {
-            ref->key = SCStrdup(lookup_ref_conf->url);
-            if (ref->key == NULL) {
-                goto error;
-            }
+            /* the reference config entry outlives the signatures, so the
+             * url prefix can be borrowed instead of copied per reference */
+            ref->key = lookup_ref_conf->url;
+            ref->key_borrowed = true;
             /* already bound checked to be REFERENCE_SYSTEM_NAME_MAX or less */
             ref->key_len = (uint16_t)strlen(ref->key);
         } else {

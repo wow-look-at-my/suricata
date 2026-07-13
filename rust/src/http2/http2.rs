@@ -303,7 +303,7 @@ pub struct HTTP2Transaction {
     pub req_line: Vec<u8>,
     pub resp_line: Vec<u8>,
 
-    pub doh: Option<DohHttp2Tx>,
+    pub doh: Option<Box<DohHttp2Tx>>,
 }
 
 impl Transaction for HTTP2Transaction {
@@ -384,7 +384,7 @@ impl HTTP2Transaction {
                     if let Some(doh) = &mut self.doh {
                         doh.is_doh_data[dir.index()] = true;
                     } else {
-                        let mut doh = DohHttp2Tx::default();
+                        let mut doh = Box::<DohHttp2Tx>::default();
                         doh.is_doh_data[dir.index()] = true;
                         self.doh = Some(doh);
                     }
@@ -632,7 +632,10 @@ impl HTTP2Transaction {
                 if padded && !rem.is_empty() && usize::from(rem[0]) < hlsafe {
                     dinput = &rem[1..hlsafe - usize::from(rem[0])];
                 }
-                let mut output = Vec::with_capacity(decompression::HTTP2_DECOMPRESSION_CHUNK_SIZE);
+                // Allocation is left to the decompressor: it resizes
+                // output to its chunk size on first use, and no buffer
+                // is needed at all without an assigned decompressor.
+                let mut output = Vec::new();
                 match self.decompress(dinput, &mut output, dir, sfcm, over, flow) {
                     Ok(_) => {
                         if over {
@@ -704,7 +707,7 @@ impl Default for HTTP2DynTable {
 impl HTTP2DynTable {
     pub fn new() -> Self {
         Self {
-            table: Vec::with_capacity(64),
+            table: Vec::new(),
             current_size: 0,
             max_size: 4096, //default value
             overflow: 0,
@@ -1419,10 +1422,10 @@ impl HTTP2State {
                             if let Some(doh) = &mut tx.doh {
                                 doh.dns_request_tx = Some(dtx);
                             } else {
-                                let doh = DohHttp2Tx {
+                                let doh = Box::new(DohHttp2Tx {
                                     dns_request_tx: Some(dtx),
                                     ..Default::default()
-                                };
+                                });
                                 tx.doh = Some(doh);
                             }
                         }

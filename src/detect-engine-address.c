@@ -1344,6 +1344,13 @@ void DetectAddressMapFree(DetectEngineCtx *de_ctx)
 static bool DetectAddressMapAdd(DetectEngineCtx *de_ctx, const char *string,
         DetectAddressHead *address, bool contains_negation)
 {
+    /* the table is freed after the engine is built, re-init it in case
+     * a signature is parsed after that */
+    if (de_ctx->address_table == NULL) {
+        if (DetectAddressMapInit(de_ctx) < 0)
+            return false;
+    }
+
     DetectAddressMap *map = SCCalloc(1, sizeof(*map));
     if (map == NULL)
         return false;
@@ -1368,6 +1375,9 @@ static bool DetectAddressMapAdd(DetectEngineCtx *de_ctx, const char *string,
 static const DetectAddressMap *DetectAddressMapLookup(DetectEngineCtx *de_ctx,
                                                 const char *string)
 {
+    if (de_ctx->address_table == NULL)
+        return NULL;
+
     DetectAddressMap map = { (char *)string, NULL, false };
 
     const DetectAddressMap *res = HashListTableLookup(de_ctx->address_table,

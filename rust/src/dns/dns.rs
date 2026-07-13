@@ -250,7 +250,7 @@ pub enum DNSRData {
     TXT(Vec<Vec<u8>>),
     NULL(Vec<u8>),
     // RData has several fields
-    SOA(DNSRDataSOA),
+    SOA(Box<DNSRDataSOA>),
     SRV(DNSRDataSRV),
     SSHFP(DNSRDataSSHFP),
     OPT(Vec<DNSRDataOPT>),
@@ -281,8 +281,8 @@ pub struct DNSMessage {
 #[derive(Debug, Default)]
 pub struct DNSTransaction {
     pub id: u64,
-    pub request: Option<DNSMessage>,
-    pub response: Option<DNSMessage>,
+    pub request: Option<Box<DNSMessage>>,
+    pub response: Option<Box<DNSMessage>>,
     pub tx_data: AppLayerTxData,
 }
 
@@ -449,9 +449,9 @@ pub(crate) fn dns_parse_request(
             }
 
             if variant.is_mdns() && request.header.flags & 0x8000 != 0 {
-                tx.response = Some(request);
+                tx.response = Some(Box::new(request));
             } else {
-                tx.request = Some(request);
+                tx.request = Some(Box::new(request));
             }
 
             if z_flag {
@@ -511,7 +511,7 @@ pub(crate) fn dns_parse_response(input: &[u8]) -> Result<DNSTransaction, DNSPars
             if response.invalid_authorities {
                 tx.set_event(DNSEvent::InvalidAuthorities);
             }
-            tx.response = Some(response);
+            tx.response = Some(Box::new(response));
 
             if flags & 0x8000 == 0 {
                 SCLogDebug!("DNS message is not a response");
