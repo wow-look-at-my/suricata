@@ -704,7 +704,7 @@ impl Default for HTTP2DynTable {
 impl HTTP2DynTable {
     pub fn new() -> Self {
         Self {
-            table: Vec::with_capacity(64),
+            table: Vec::new(),
             current_size: 0,
             max_size: 4096, //default value
             overflow: 0,
