@@ -303,7 +303,7 @@ THashTableContext *THashInit(const char *cnf_prefix, uint32_t data_size,
         int (*DataSet)(void *, void *), void (*DataFree)(void *),
         uint32_t (*DataHash)(uint32_t, void *), bool (*DataCompare)(void *, void *),
         bool (*DataExpired)(void *, SCTime_t), uint32_t (*DataSize)(void *), bool reset_memcap,
-        uint64_t memcap, uint32_t hashsize)
+        uint64_t memcap, uint32_t hashsize, uint32_t prealloc)
 {
     THashTableContext *ctx = SCCalloc(1, sizeof(*ctx));
     BUG_ON(!ctx);
@@ -326,7 +326,9 @@ THashTableContext *THashInit(const char *cnf_prefix, uint32_t data_size,
     } else {
         SC_ATOMIC_SET(ctx->config.memcap, reset_memcap ? UINT64_MAX : THASH_DEFAULT_MEMCAP);
     }
-    ctx->config.prealloc = THASH_DEFAULT_PREALLOC;
+    /* callers pass 0 to get the default; the per-table yaml 'prealloc'
+     * key still overrides either value in THashInitConfig */
+    ctx->config.prealloc = prealloc > 0 ? prealloc : THASH_DEFAULT_PREALLOC;
 
     SC_ATOMIC_INIT(ctx->counter);
     SC_ATOMIC_INIT(ctx->memuse);
