@@ -50,6 +50,7 @@
 
 #include "detect.h"
 #include "detect-parse.h"
+#include "detect-pcre.h"
 #include "detect-engine.h"
 #include "detect-engine-address.h"
 #include "detect-engine-alert.h"
@@ -463,6 +464,7 @@ void GlobalsDestroy(void)
     SCConfDeInit();
 
     DetectParseFreeRegexes();
+    DetectPcreFreeContexts();
 
     SCPidfileRemove(suri->pid_filename);
     SCFree(suri->pid_filename);
