@@ -329,18 +329,16 @@ pub fn smb_write_dcerpc_record(
                                     } else {
                                         i.iface.to_vec()
                                     };
-                                    let uuid_str = uuid::Uuid::from_slice(&x.clone());
-                                    let _uuid_str = uuid_str
-                                        .map(|uuid_str| uuid_str.to_hyphenated().to_string())
-                                        .unwrap();
-                                    let d = DCERPCIface::new(x, i.ver, i.ver_min, i.ctx_id);
                                     SCLogDebug!(
                                         "UUID {} version {}/{} bytes {:?}",
-                                        _uuid_str,
+                                        uuid::Uuid::from_slice(&x)
+                                            .map(|uuid_str| uuid_str.to_hyphenated().to_string())
+                                            .unwrap(),
                                         i.ver,
                                         i.ver_min,
                                         i.iface
                                     );
+                                    let d = DCERPCIface::new(x, i.ver, i.ver_min, i.ctx_id);
                                     ifaces.push(d);
                                 }
                                 bind_ifaces = Some(ifaces);
