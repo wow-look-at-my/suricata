@@ -15,7 +15,6 @@ jobs:
         run: echo $JSON
         env:
           JSON: ${{ toJSON(github) }}
-      - run: sudo apt update && sudo apt -y install jq curl
       - name: Parse repo and branch information
         env:
           # We fetch the actual pull request to get the latest body as

@@ -9,59 +9,22 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  DEBIAN_FRONTEND: "noninteractive"
-
 jobs:
 
   check-commits:
     name: Commit Check
     runs-on: ubuntu-latest
-    container: ubuntu:20.04
+    container:
+      image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-20.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Caching ~/.cargo
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.cargo
           key: commit-check-cargo
-      - name: Install dependencies
-        run: |
-          apt update
-          apt -y install \
-                libpcre2-dev \
-                build-essential \
-                autoconf \
-                automake \
-                cargo \
-                curl \
-                git \
-                jq \
-                libtool \
-                libpcap-dev \
-                libnet1-dev \
-                libyaml-0-2 \
-                libyaml-dev \
-                libcap-ng-dev \
-                libcap-ng0 \
-                libmagic-dev \
-                libnetfilter-queue-dev \
-                libnetfilter-queue1 \
-                libnfnetlink-dev \
-                libnfnetlink0 \
-                libhiredis-dev \
-                libjansson-dev \
-                libevent-dev \
-                libevent-pthreads-2.1-7 \
-                libpython2.7 \
-                libssl-dev \
-                make \
-                parallel \
-                pkg-config \
-                python3-yaml \
-                rustc \
-                software-properties-common \
-                zlib1g \
-                zlib1g-dev
       - run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Installing sccache
         run: |

@@ -1,8 +1,11 @@
 # suricata-ci-ubuntu-22.04 (FROM ubuntu:22.04)
 #
-# Covers builds.yml jobs:
-#   ubuntu-22-04-debug-validation, ubuntu-22-04-fuzz,
-#   ubuntu-22-04-dpdk-build (all 4 matrix entries), ubuntu-22-04-dist
+# Covers:
+#   builds.yml: ubuntu-22-04-debug-validation, ubuntu-22-04-fuzz,
+#               ubuntu-22-04-dpdk-build (all 4 matrix entries),
+#               ubuntu-22-04-dist
+#   docs.yml:   ubuntu-22-04-dist (same package set as the builds.yml
+#               dist job, already fully baked here)
 #
 # Union of those jobs' apt install steps, replicated verbatim:
 #   - afl/afl-clang from the fuzz job (inert unless CC=afl-clang-fast)

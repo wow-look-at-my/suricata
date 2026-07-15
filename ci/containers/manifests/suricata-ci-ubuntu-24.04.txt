@@ -7,6 +7,10 @@
 #               ubuntu-latest-namespace-ips, ubuntu-24-04-asan-afpdpdk,
 #               ubuntu-24-04-cov-fuzz
 #   formatting.yml: check-formatting
+#   codeql.yml, codeqlpy.yml: analyze (libssl-dev comes from their lists;
+#               inert for the other jobs, configure.ac has no OpenSSL
+#               detection. The baked cbindgen replaces their cargo
+#               install cbindgen step.)
 #
 # Union of those jobs' apt install steps, replicated verbatim, EXCEPT
 # libhyperscan-dev, deliberately left out: ./configure auto-detects
@@ -58,6 +62,7 @@ libnuma-dev
 libpcap-dev
 libpcre2-dev
 libpython3.12
+libssl-dev
 libtool
 libyaml-0-2
 libyaml-dev
