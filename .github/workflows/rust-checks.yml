@@ -21,7 +21,7 @@ jobs:
   # any warnings are raised.
   audit:
     name: Cargo Audit
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
       credentials:
@@ -68,7 +68,7 @@ jobs:
   # transitive dependency.
   update:
     name: Cargo Update
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
       credentials:
