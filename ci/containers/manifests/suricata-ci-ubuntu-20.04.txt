@@ -1,11 +1,16 @@
 # suricata-ci-ubuntu-20.04 (FROM ubuntu:20.04)
 #
-# Covers builds.yml jobs: ubuntu-20-04-ndebug, ubuntu-20-04-too-old-rust
+# Covers:
+#   builds.yml:  ubuntu-20-04-ndebug, ubuntu-20-04-too-old-rust
+#   commits.yml: check-commits
 #
 # Union of those jobs' apt install steps, replicated verbatim. The
 # too-old-rust job keeps its rustup 1.62.0 install step in the workflow --
 # installing an unsupported Rust IS that test -- so no Rust is baked here
-# beyond the apt cargo/rustc used by the ndebug job.
+# beyond the apt cargo/rustc used by the ndebug job. libssl-dev and
+# pkg-config come from the commits.yml list; both are inert for the
+# builds.yml jobs (configure.ac has no OpenSSL detection). commits.yml
+# keeps its pinned sccache/cbindgen binary downloads in the workflow.
 #
 # Bonus: ubuntu:20.04 (focal) is EOL; baking the packages now insulates
 # these jobs from the archive being moved to old-releases.ubuntu.com.
@@ -36,11 +41,13 @@ libnuma-dev
 libpcap-dev
 libpcre2-dev
 libpython2.7
+libssl-dev
 libtool
 libyaml-0-2
 libyaml-dev
 make
 parallel
+pkg-config
 python3-yaml
 rustc
 software-properties-common

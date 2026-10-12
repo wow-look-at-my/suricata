@@ -1,5 +1,6 @@
 # Builds and publishes the prebaked CI dependency images used by
-# builds.yml, rust-checks.yml, scan-build.yml and formatting.yml.
+# builds.yml, rust-checks.yml, scan-build.yml, formatting.yml, commits.yml,
+# docs.yml, codeql.yml and codeqlpy.yml.
 #
 # All images are built from the single parameterized ci/containers/Dockerfile;
 # per-distro differences live in ci/containers/manifests/<image>.txt (package
@@ -49,8 +50,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - image: suricata-ci-almalinux-8
+            base: almalinux:8
           - image: suricata-ci-almalinux-9
             base: almalinux:9
+          - image: suricata-ci-almalinux-10
+            base: almalinux:10
+          - image: suricata-ci-centos-stream9
+            base: quay.io/centos/centos:stream9
           - image: suricata-ci-debian-11
             base: debian:11
           - image: suricata-ci-debian-12

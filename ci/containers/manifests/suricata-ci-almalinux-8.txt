@@ -1,0 +1,41 @@
+# suricata-ci-almalinux-8 (FROM almalinux:8)
+#
+# Covers builds.yml jobs: almalinux-8
+#
+# Replicates that job's yum install step verbatim. install-deps.sh enables
+# powertools (EL8's name for CRB) and, matching the job, does NOT add EPEL
+# on EL8. No cbindgen here: EL8 has no cbindgen package, the job gets it
+# from the prepare-cbindgen artifact via .github/actions/install-cbindgen.
+autoconf
+automake
+cargo-vendor
+diffutils
+dpdk-devel
+file-devel
+gcc
+gcc-c++
+git
+hwloc
+hwloc-devel
+jansson-devel
+jq
+libcap-ng-devel
+libevent-devel
+libmaxminddb-devel
+libnet-devel
+libnetfilter_queue-devel
+libnfnetlink-devel
+libpcap-devel
+libtool
+libyaml-devel
+lz4-devel
+make
+numactl-devel
+pcre2-devel
+pkgconfig
+python3-devel
+python3-yaml
+rust-toolset
+sudo
+which
+zlib-devel

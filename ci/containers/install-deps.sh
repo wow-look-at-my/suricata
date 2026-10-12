@@ -34,18 +34,25 @@ if command -v apt-get >/dev/null 2>&1; then
     apt-get install -y $pkgs
     rm -rf /var/lib/apt/lists/*
 elif command -v dnf >/dev/null 2>&1; then
-    # AlmaLinux/CentOS need EPEL + CRB, exactly as the workflow jobs enable
-    # them; Fedora does not.
+    # AlmaLinux/CentOS need extra repos enabled, exactly as the workflow
+    # jobs enabled them; Fedora does not. EL8 uses powertools (its name
+    # for CRB) and -- matching the almalinux-8 job -- no EPEL; EL9+ gets
+    # EPEL + CRB.
     if [ -e /etc/almalinux-release ] || [ -e /etc/centos-release ]; then
-        dnf -y install dnf-plugins-core epel-release
-        dnf config-manager --set-enabled crb
+        if [ "$(rpm --eval '%{rhel}')" = "8" ]; then
+            dnf -y install dnf-plugins-core
+            dnf config-manager --set-enabled powertools
+        else
+            dnf -y install dnf-plugins-core epel-release
+            dnf config-manager --set-enabled crb
+        fi
     fi
     # shellcheck disable=SC2086
     dnf -y install $pkgs
     dnf clean all
 elif command -v yum >/dev/null 2>&1; then
-    # EL8-era fallback (powertools instead of crb), for a future
-    # almalinux-8 manifest; no current image uses this branch.
+    # yum-only fallback; no current image uses this branch (almalinux:8
+    # ships dnf, so the EL8 image goes through the dnf branch above).
     yum -y install dnf-plugins-core
     yum config-manager --set-enabled powertools
     # shellcheck disable=SC2086

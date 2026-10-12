@@ -1,0 +1,56 @@
+# suricata-ci-almalinux-10 (FROM almalinux:10)
+#
+# Covers builds.yml jobs: almalinux-10
+#
+# Replicates that job's dnf install step verbatim (EPEL + CRB are enabled
+# by install-deps.sh, exactly as the job's bootstrap lines did), including
+# the texlive set the job installs for the PDF documentation build.
+autoconf
+automake
+cargo-vendor
+cbindgen
+clippy
+diffutils
+dpdk-devel
+file-devel
+gcc
+gcc-c++
+git
+hwloc
+hwloc-devel
+jansson-devel
+jq
+libcap-ng-devel
+libevent-devel
+libmaxminddb-devel
+libnet-devel
+libnetfilter_queue-devel
+libnfnetlink-devel
+libpcap-devel
+libtool
+libyaml-devel
+lz4-devel
+make
+numactl-devel
+pcre2-devel
+pkgconfig
+python3-devel
+python3-sphinx
+python3-yaml
+rustfmt
+rust-toolset
+sudo
+which
+zlib-devel
+# PDF build deps ("These packages required to build the PDF" in the job)
+texlive-latex
+texlive-cmap
+texlive-collection-latexrecommended
+texlive-fncychap
+texlive-titlesec
+texlive-tabulary
+texlive-framed
+texlive-wrapfig
+texlive-upquote
+texlive-capt-of
+texlive-needspace
