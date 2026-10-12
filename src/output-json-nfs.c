@@ -93,7 +93,6 @@ static int JsonNFSLogger(ThreadVars *tv, void *thread_data,
     SCNfsLogJsonResponse(state, tx, jb);
     SCJbClose(jb);
 
-    MemBufferReset(thread->buffer);
     OutputJsonBuilderBuffer(tv, p, p->flow, jb, thread);
     SCJbFree(jb);
     return TM_ECODE_OK;

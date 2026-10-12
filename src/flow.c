@@ -656,6 +656,11 @@ void FlowInitConfig(bool quiet)
                "%"PRIu32", prealloc: %"PRIu32, SC_ATOMIC_GET(flow_config.memcap),
                flow_config.hash_size, flow_config.prealloc);
 
+    /* hash_size is >= 1 here: the default is non-zero and a 0 config
+     * value is rejected above */
+    flow_config.hash_size_mask = flow_config.hash_size - 1;
+    flow_config.hash_size_pow2 = (flow_config.hash_size & flow_config.hash_size_mask) == 0;
+
     /* alloc hash memory */
     uint64_t hash_size = flow_config.hash_size * sizeof(FlowBucket);
     if (!(FLOW_CHECK_MEMCAP(hash_size))) {

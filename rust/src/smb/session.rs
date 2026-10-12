@@ -40,9 +40,9 @@ impl SMBState {
         let mut tx = self.new_tx()?;
 
         tx.hdr = hdr;
-        tx.type_data = Some(SMBTransactionTypeData::SESSIONSETUP(
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::SESSIONSETUP(
             SMBTransactionSessionSetup::new(),
-        ));
+        )));
         tx.request_done = true;
         tx.response_done = self.tc_trunc; // no response expected if tc is truncated
 
@@ -54,7 +54,7 @@ impl SMBState {
     pub fn get_sessionsetup_tx(&mut self, hdr: SMBCommonHdr) -> Option<&mut SMBTransaction> {
         for tx in &mut self.transactions {
             let hit = tx.hdr.compare(&hdr)
-                && match tx.type_data {
+                && match tx.type_data.as_deref() {
                     Some(SMBTransactionTypeData::SESSIONSETUP(_)) => true,
                     _ => false,
                 };

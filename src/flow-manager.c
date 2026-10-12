@@ -757,7 +757,9 @@ static TmEcode FlowManagerThreadInit(ThreadVars *t, const void *initdata, void *
     ftd->counter_defrag_timeout = StatsRegisterCounter("defrag.mgr.tracker_timeout", &t->stats);
     ftd->counter_defrag_memuse = StatsRegisterCounter("defrag.memuse", &t->stats);
 
-    PacketPoolInit();
+    /* the flow manager never takes packets from its own pool, so don't
+     * preallocate max-pending-packets packets for it */
+    PacketPoolInitEmpty();
     return TM_ECODE_OK;
 }
 

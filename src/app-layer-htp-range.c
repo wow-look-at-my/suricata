@@ -42,6 +42,9 @@ ContainerTHashTable ContainerUrlRangeList;
 static void HttpRangeBlockDerefContainer(HttpRangeContainerBlock *b);
 
 #define CONTAINER_URLRANGE_HASH_SIZE 256
+/* preallocated byterange containers: the feature is idle unless HTTP
+ * range requests are tracked, so keep the floor small */
+#define CONTAINER_URLRANGE_PREALLOC 64
 
 int HTPByteRangeSetMemcap(uint64_t size)
 {
@@ -193,7 +196,7 @@ void HttpRangeContainersInit(void)
     ContainerUrlRangeList.ht = THashInit("app-layer.protocols.http.byterange",
             sizeof(HttpRangeContainerFile), ContainerUrlRangeSet, ContainerUrlRangeFree,
             ContainerUrlRangeHash, ContainerUrlRangeCompare, ContainerValueRangeTimeout, NULL,
-            false, memcap, CONTAINER_URLRANGE_HASH_SIZE);
+            false, memcap, CONTAINER_URLRANGE_HASH_SIZE, CONTAINER_URLRANGE_PREALLOC);
     ContainerUrlRangeList.timeout = timeout;
 
     SCLogDebug("containers started");

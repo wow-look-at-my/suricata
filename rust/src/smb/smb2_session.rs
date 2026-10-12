@@ -31,7 +31,7 @@ pub fn smb2_session_setup_request(state: &mut SMBState, r: &Smb2Record) {
             };
             tx.vercmd.set_smb2_cmd(r.command);
 
-            if let Some(SMBTransactionTypeData::SESSIONSETUP(ref mut td)) = tx.type_data {
+            if let Some(SMBTransactionTypeData::SESSIONSETUP(td)) = tx.type_data.as_deref_mut() {
                 if let Some(s) = parse_secblob(setup.data) {
                     td.ntlmssp = s.ntlmssp;
                     td.krb_ticket = s.krb;

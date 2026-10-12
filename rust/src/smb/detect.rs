@@ -38,7 +38,7 @@ unsafe extern "C" fn smb_tx_get_share(
     tx: *const c_void, _flags: u8, buffer: *mut *const u8, buffer_len: *mut u32,
 ) -> bool {
     let tx = cast_pointer!(tx, SMBTransaction);
-    if let Some(SMBTransactionTypeData::TREECONNECT(ref x)) = tx.type_data {
+    if let Some(SMBTransactionTypeData::TREECONNECT(x)) = tx.type_data.as_deref() {
         SCLogDebug!("is_pipe {}", x.is_pipe);
         if !x.is_pipe {
             *buffer = x.share_name.as_ptr();
@@ -56,7 +56,7 @@ unsafe extern "C" fn smb_tx_get_named_pipe(
     tx: *const c_void, _flags: u8, buffer: *mut *const u8, buffer_len: *mut u32,
 ) -> bool {
     let tx = cast_pointer!(tx, SMBTransaction);
-    if let Some(SMBTransactionTypeData::TREECONNECT(ref x)) = tx.type_data {
+    if let Some(SMBTransactionTypeData::TREECONNECT(x)) = tx.type_data.as_deref() {
         SCLogDebug!("is_pipe {}", x.is_pipe);
         if x.is_pipe {
             *buffer = x.share_name.as_ptr();
@@ -74,7 +74,7 @@ pub(crate) unsafe extern "C" fn smb_tx_get_stub_data(
     tx: *const c_void, direction: u8, buffer: *mut *const u8, buffer_len: *mut u32,
 ) -> bool {
     let tx = cast_pointer!(tx, SMBTransaction);
-    if let Some(SMBTransactionTypeData::DCERPC(ref x)) = tx.type_data {
+    if let Some(SMBTransactionTypeData::DCERPC(x)) = tx.type_data.as_deref() {
         let vref = if direction == Direction::ToServer as u8 {
             &x.stub_data_ts
         } else {
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "C" fn smb_tx_match_dce_opnum(
     let dce_data = cast_pointer!(ctx, DCEOpnumData);
 
     SCLogDebug!("smb_tx_match_dce_opnum: start");
-    if let Some(SMBTransactionTypeData::DCERPC(ref x)) = tx.type_data {
+    if let Some(SMBTransactionTypeData::DCERPC(x)) = tx.type_data.as_deref() {
         if x.req_cmd == DCERPC_TYPE_REQUEST {
             match dce_data {
                 DCEOpnumData::Num(ref num_data) => {
@@ -137,8 +137,8 @@ pub(crate) unsafe fn smb_tx_match_dce_iface(
     let dce_data = cast_pointer!(dce_data, DCEIfaceData);
 
     let if_uuid = dce_data.if_uuid.as_slice();
-    let is_dcerpc_request = match tx.type_data {
-        Some(SMBTransactionTypeData::DCERPC(ref x)) => x.req_cmd == DCERPC_TYPE_REQUEST,
+    let is_dcerpc_request = match tx.type_data.as_deref() {
+        Some(SMBTransactionTypeData::DCERPC(x)) => x.req_cmd == DCERPC_TYPE_REQUEST,
         _ => false,
     };
     if !is_dcerpc_request {
@@ -178,7 +178,7 @@ unsafe extern "C" fn smb_tx_get_ntlmssp_user(
     tx: *const c_void, _flags: u8, buffer: *mut *const u8, buffer_len: *mut u32,
 ) -> bool {
     let tx = cast_pointer!(tx, SMBTransaction);
-    if let Some(SMBTransactionTypeData::SESSIONSETUP(ref x)) = tx.type_data {
+    if let Some(SMBTransactionTypeData::SESSIONSETUP(x)) = tx.type_data.as_deref() {
         if let Some(ref ntlmssp) = x.ntlmssp {
             *buffer = ntlmssp.user.as_ptr();
             *buffer_len = ntlmssp.user.len() as u32;
@@ -195,7 +195,7 @@ unsafe extern "C" fn smb_tx_get_ntlmssp_domain(
     tx: *const c_void, _flags: u8, buffer: *mut *const u8, buffer_len: *mut u32,
 ) -> bool {
     let tx = cast_pointer!(tx, SMBTransaction);
-    if let Some(SMBTransactionTypeData::SESSIONSETUP(ref x)) = tx.type_data {
+    if let Some(SMBTransactionTypeData::SESSIONSETUP(x)) = tx.type_data.as_deref() {
         if let Some(ref ntlmssp) = x.ntlmssp {
             *buffer = ntlmssp.domain.as_ptr();
             *buffer_len = ntlmssp.domain.len() as u32;

@@ -85,12 +85,15 @@ InspectionBuffer *InspectionBufferMultipleForListGet(
 
     if (local_id >= fb->size) {
         uint32_t old_size = fb->size;
-        uint32_t new_size = local_id + 1;
+        /* grow geometrically instead of exact-fit to avoid a realloc plus
+         * copy for every new per-thread local_id high-water mark */
+        uint32_t new_size = MAX(local_id + 1, MAX(4, old_size * 2));
+        new_size = MIN(new_size, 1024);
         uint32_t grow_by = new_size - old_size;
         SCLogDebug("size is %u, need %u, so growing by %u", old_size, new_size, grow_by);
 
         SCLogDebug("fb->inspection_buffers %p", fb->inspection_buffers);
-        void *ptr = SCRealloc(fb->inspection_buffers, (local_id + 1) * sizeof(InspectionBuffer));
+        void *ptr = SCRealloc(fb->inspection_buffers, new_size * sizeof(InspectionBuffer));
         if (ptr == NULL)
             return NULL;
 

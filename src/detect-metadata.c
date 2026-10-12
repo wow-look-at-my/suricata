@@ -66,6 +66,27 @@ void DetectMetadataFree(DetectMetadata *mdata)
     SCReturn;
 }
 
+/**
+ *  \brief Free a signature's metadata key/value list
+ *
+ *  The list is only used while parsing, to build the preformatted json
+ *  string that the runtime uses, so it can be freed once the signature
+ *  is fully set up. The key/value strings are owned by the de_ctx
+ *  metadata hash table.
+ */
+void DetectMetadataListFree(Signature *s)
+{
+    if (s->metadata == NULL)
+        return;
+
+    for (DetectMetadata *m = s->metadata->list; m != NULL;) {
+        DetectMetadata *next = m->next;
+        DetectMetadataFree(m);
+        m = next;
+    }
+    s->metadata->list = NULL;
+}
+
 int DetectMetadataHashInit(DetectEngineCtx *de_ctx)
 {
     if (! DetectEngineMustParseMetadata())
@@ -79,12 +100,21 @@ int DetectMetadataHashInit(DetectEngineCtx *de_ctx)
 
 void DetectMetadataHashFree(DetectEngineCtx *de_ctx)
 {
-    if (de_ctx->metadata_table)
+    if (de_ctx->metadata_table) {
         HashTableFree(de_ctx->metadata_table);
+        de_ctx->metadata_table = NULL;
+    }
 }
 
 static const char *DetectMetadataHashAdd(DetectEngineCtx *de_ctx, const char *string)
 {
+    /* the table is freed after the engine is built, re-init it in case
+     * a signature is parsed after that */
+    if (de_ctx->metadata_table == NULL) {
+        if (DetectMetadataHashInit(de_ctx) < 0 || de_ctx->metadata_table == NULL)
+            return NULL;
+    }
+
     const char *hstring = (char *)HashTableLookup(
             de_ctx->metadata_table, (void *)string, (uint16_t)strlen(string));
     if (hstring) {

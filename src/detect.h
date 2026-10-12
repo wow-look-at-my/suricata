@@ -1252,8 +1252,9 @@ typedef struct SignatureNonPrefilterStore_ {
 
 /** array of TX inspect rule candidates */
 typedef struct RuleMatchCandidateTx {
-    SigIntId id;            /**< internal signature id */
     uint32_t *flags;        /**< inspect flags ptr */
+    const Signature *s;     /**< ptr to sig */
+    SigIntId id;            /**< internal signature id */
     union {
         struct {
             bool stream_stored;
@@ -1261,8 +1262,6 @@ typedef struct RuleMatchCandidateTx {
         };
         uint32_t stream_reset;
     };
-
-    const Signature *s;     /**< ptr to sig */
 } RuleMatchCandidateTx;
 
 /** Stores a single u32 for a rule match of the type `sm_type`. Used by

@@ -171,49 +171,20 @@ typedef struct SSLSubjectAltName_ {
 } SSLSubjectAltName;
 
 typedef struct SSLStateConnp_ {
-    /* record length */
-    uint32_t record_length;
-    /* record length's length for SSLv2 */
-    uint32_t record_lengths_length;
-
-    /* offset of the beginning of the current message (including header) */
-    uint32_t message_length;
-
-    uint16_t version;
-    uint8_t content_type;
-
-    uint8_t handshake_type;
-
-    /* the no of bytes processed in the currently parsed record */
-    uint32_t bytes_processed;
-
-    uint16_t session_id_length;
-
-    uint8_t random[TLS_RANDOM_LEN];
     uint8_t *cert0_subject;
-    uint32_t cert0_subject_len;
     uint8_t *cert0_issuerdn;
-    uint32_t cert0_issuerdn_len;
     uint8_t *cert0_serial;
-    uint32_t cert0_serial_len;
-    int64_t cert0_not_before;
-    int64_t cert0_not_after;
     char *cert0_fingerprint;
-
     SSLSubjectAltName *cert0_sans;
-    uint16_t cert0_sans_num;
+
     /* ssl server name indication extension */
     uint8_t *sni;
-    uint16_t sni_len;
 
     char *session_id;
 
     TAILQ_HEAD(, SSLCertsChain_) certs;
 
     uint8_t *certs_buffer;
-    uint32_t certs_buffer_size;
-
-    uint32_t cert_log_flag;
 
     JA3Buffer *ja3_str;
     char *ja3_hash;
@@ -223,10 +194,42 @@ typedef struct SSLStateConnp_ {
     /* handshake tls fragmentation buffer. Handshake messages can be fragmented over multiple
      * TLS records. */
     uint8_t *hs_buffer;
-    uint8_t hs_buffer_message_type;
+
+    int64_t cert0_not_before;
+    int64_t cert0_not_after;
+
+    /* record length */
+    uint32_t record_length;
+    /* record length's length for SSLv2 */
+    uint32_t record_lengths_length;
+
+    /* offset of the beginning of the current message (including header) */
+    uint32_t message_length;
+
+    /* the no of bytes processed in the currently parsed record */
+    uint32_t bytes_processed;
+
+    uint32_t cert0_subject_len;
+    uint32_t cert0_issuerdn_len;
+    uint32_t cert0_serial_len;
+    uint32_t certs_buffer_size;
+
+    uint32_t cert_log_flag;
+
     uint32_t hs_buffer_message_size;
     uint32_t hs_buffer_size;   /**< allocation size */
     uint32_t hs_buffer_offset; /**< write offset */
+
+    uint16_t version;
+    uint16_t session_id_length;
+    uint16_t cert0_sans_num;
+    uint16_t sni_len;
+
+    uint8_t content_type;
+    uint8_t handshake_type;
+    uint8_t hs_buffer_message_type;
+
+    uint8_t random[TLS_RANDOM_LEN];
 } SSLStateConnp;
 
 /**
@@ -237,8 +240,9 @@ typedef struct SSLStateConnp_ {
 typedef struct SSLState_ {
     Flow *f;
 
-    AppLayerStateData state_data;
     AppLayerTxData tx_data;
+
+    SSLStateConnp *curr_connp;
 
     /* holds some state flags we need */
     uint32_t flags;
@@ -246,14 +250,14 @@ typedef struct SSLState_ {
     /* there might be a better place to store this*/
     uint32_t hb_record_len;
 
-    uint16_t events;
-
     uint32_t current_flags;
-
-    SSLStateConnp *curr_connp;
 
     enum TlsStateClient client_state;
     enum TlsStateServer server_state;
+
+    uint16_t events;
+
+    AppLayerStateData state_data;
 
     SSLStateConnp client_connp;
     SSLStateConnp server_connp;

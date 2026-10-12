@@ -71,8 +71,11 @@ Flow *FlowAlloc(void)
         return NULL;
     }
 
+    /* SCCalloc zeroed the flow, so every field of FLOW_INITIALIZE except
+     * the lock init already holds its 0/NULL init value. Stack allocated
+     * flows (unittests) keep using the full FLOW_INITIALIZE. */
     /* coverity[missing_lock] */
-    FLOW_INITIALIZE(f);
+    FLOWLOCK_INIT(f);
     return f;
 }
 

@@ -417,13 +417,27 @@ impl State<NFSTransaction> for NFSState {
     }
 }
 
+/// Create a `LruCache` with capacity `cap` without preallocating its
+/// backing table. `LruCache::new()` reserves space for `cap` entries up
+/// front, which for the NFS maps adds up to tens of KB per flow even
+/// if no entry is ever inserted. Starting from an unbounded (empty)
+/// cache and then setting the capacity keeps the eviction behavior
+/// identical while the table only grows on demand.
+fn lru_cache_lazy_alloc<K: std::hash::Hash + Eq, V>(cap: NonZeroUsize) -> LruCache<K, V> {
+    let mut cache = LruCache::unbounded();
+    cache.resize(cap);
+    cache
+}
+
 impl NFSState {
     /// Allocation function for a new TLS parser instance
     pub fn new() -> NFSState {
         NFSState {
             state_data: AppLayerStateData::default(),
-            requestmap: LruCache::new(NonZeroUsize::new(unsafe { NFS_CFG_MAX_REQ }).unwrap()),
-            namemap: LruCache::new(NonZeroUsize::new(unsafe { NFS_CFG_MAX_NAMES }).unwrap()),
+            requestmap: lru_cache_lazy_alloc(
+                NonZeroUsize::new(unsafe { NFS_CFG_MAX_REQ }).unwrap(),
+            ),
+            namemap: lru_cache_lazy_alloc(NonZeroUsize::new(unsafe { NFS_CFG_MAX_NAMES }).unwrap()),
             transactions: Vec::new(),
             ts_chunk_xid: 0,
             tc_chunk_xid: 0,

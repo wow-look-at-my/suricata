@@ -198,6 +198,9 @@ int DetectEnginePktInspectionSetup(Signature *s);
 void DetectEngineSetParseMetadata(void);
 void DetectEngineUnsetParseMetadata(void);
 int DetectEngineMustParseMetadata(void);
+void DetectEngineSetKeepSigStr(void);
+void DetectEngineEnableSigStrFree(void);
+int DetectEngineCanFreeSigStr(void);
 
 bool DetectBufferIsPresent(const Signature *s, const uint32_t buf_id);
 

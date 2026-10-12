@@ -49,7 +49,9 @@ uint32_t FUNC_NAME(const SCACTileSearchCtx *ctx, MpmThreadCtx *mpm_thread_ctx,
     int matches = 0;
 
     uint8_t *mpm_bitarray = (uint8_t *)mpm_thread_ctx->ctx;
-    memset(mpm_bitarray, 0, mpm_thread_ctx->memory_size);
+    /* only zero this ctx's pattern index span: all bit accesses during the
+     * search stay below mpm_bitarray_size */
+    memset(mpm_bitarray, 0, ctx->mpm_bitarray_size);
 
     const uint8_t* restrict xlate = ctx->translate_table;
     STYPE *state_table = (STYPE*)ctx->state_table;

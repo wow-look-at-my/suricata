@@ -1677,7 +1677,6 @@ sockaddr_ll) + ETH_HLEN) - ETH_HLEN);
 static int AFPComputeRingParamsV3(AFPThreadVars *ptv)
 {
     ptv->req.v3.tp_block_size = ptv->block_size;
-    ptv->req.v3.tp_frame_size = 2048;
     int frames_per_block = 0;
     int tp_hdrlen = sizeof(struct tpacket3_hdr);
     int snaplen = default_packet_size;
@@ -2556,6 +2555,7 @@ TmEcode ReceiveAFPThreadInit(ThreadVars *tv, const void *initdata, void **data)
     if (ptv->livedev == NULL) {
         SCLogError("Unable to find Live device");
         SCFree(ptv);
+        afpconfig->DerefFunc(afpconfig);
         SCReturnInt(TM_ECODE_FAILED);
     }
 

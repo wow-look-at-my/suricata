@@ -653,7 +653,6 @@ impl ConnectionParser {
         // Run hook REQUEST_START.
         self.cfg
             .hook_request_start
-            .clone()
             .run_all(self, self.request_index())?;
         Ok(())
     }
@@ -679,7 +678,6 @@ impl ConnectionParser {
             // Run hook HTP_REQUEST_TRAILER.
             self.cfg
                 .hook_request_trailer
-                .clone()
                 .run_all(self, self.request_index())?;
             // Completed parsing this request; finalize it now.
             self.request_state = State::Finalize;
@@ -695,7 +693,6 @@ impl ConnectionParser {
             #[cfg(test)]
             self.cfg
                 .hook_request_headers
-                .clone()
                 .run_all(self, self.request_index())?;
             self.request_initialize_decompressors()?;
 
@@ -729,7 +726,6 @@ impl ConnectionParser {
         // Run hook REQUEST_LINE.
         self.cfg
             .hook_request_line
-            .clone()
             .run_all(self, self.request_index())?;
         let logger = self.logger.clone();
         let req = self.request_mut().unwrap();
@@ -763,7 +759,6 @@ impl ConnectionParser {
             // Run hook REQUEST_COMPLETE.
             self.cfg
                 .hook_request_complete
-                .clone()
                 .run_all(self, self.request_index())?;
 
             // Clear request data
@@ -792,7 +787,6 @@ impl ConnectionParser {
             // Run hook TRANSACTION_COMPLETE.
             self.cfg
                 .hook_transaction_complete
-                .clone()
                 .run_all(self, _tx_index)?;
         }
         Ok(())
@@ -824,7 +818,6 @@ impl ConnectionParser {
         // Run hook RESPONSE_START.
         self.cfg
             .hook_response_start
-            .clone()
             .run_all(self, self.response_index())?;
         // If at this point we have no method and no uri and our status
         // is still REQ_LINE, we likely have timed out request
@@ -854,7 +847,6 @@ impl ConnectionParser {
         #[cfg(test)]
         self.cfg
             .hook_response_headers
-            .clone()
             .run_all(self, self.response_index())?;
         self.response_initialize_decompressors()
     }
@@ -876,7 +868,7 @@ impl ConnectionParser {
         let index = tx.index;
         // Run hook HTP_RESPONSE_LINE
         #[cfg(test)]
-        return self.cfg.hook_response_line.clone().run_all(self, index);
+        return self.cfg.hook_response_line.run_all(self, index);
         #[cfg(not(test))]
         return Ok(());
     }
@@ -901,7 +893,6 @@ impl ConnectionParser {
             // Run hook RESPONSE_COMPLETE.
             self.cfg
                 .hook_response_complete
-                .clone()
                 .run_all(self, response_index)?;
 
             // Clear the data receivers hook if any

@@ -787,70 +787,48 @@ impl JsonBuilder {
 
     /// Encode a string into the buffer, escaping as needed.
     ///
-    /// The string is encoded into an intermediate vector as its faster
-    /// than building onto the buffer.
+    /// The escaped string is built directly onto the buffer: runs of
+    /// characters that need no escaping are appended in one go, only
+    /// escape sequences are pushed individually.
     ///
-    /// TODO: Revisit this, would be nice to build directly onto the
-    ///    existing buffer.
+    /// Only ASCII characters are ever escaped (ESCAPED is 0 for all
+    /// bytes >= 0x80) and every escape sequence is pure ASCII, so the
+    /// slice boundaries around escaped bytes always fall on UTF-8
+    /// character boundaries and the output remains valid UTF-8.
     #[inline(always)]
     fn encode_string(&mut self, val: &str) -> Result<(), JsonError> {
-        let mut buf = Vec::new();
+        // Reserve for the common case of a string that needs no
+        // escaping, plus the enclosing quotes. Any growth needed for
+        // escape sequences is amortized by push/push_str.
+        if self.buf.capacity() < self.buf.len() + val.len() + 2 {
+            self.buf.try_reserve(val.len() + 2)?;
+        }
 
-        // Start by allocating a reasonable size buffer, it will be
-        // grown if needed.
-        buf.try_reserve(val.len() * 2 + 2)?;
-        buf.resize(val.len() * 2 + 2, 0);
-
-        let mut offset = 0;
+        self.push('"')?;
         let bytes = val.as_bytes();
-        buf[offset] = b'"';
-        offset += 1;
-        for &x in bytes.iter() {
-            if offset + 7 >= buf.capacity() {
-                // We could be smarter, but just double the buffer size.
-                buf.try_reserve(buf.capacity())?;
-                buf.resize(buf.capacity(), 0);
-            }
+        let mut start = 0;
+        for (i, &x) in bytes.iter().enumerate() {
             let escape = ESCAPED[x as usize];
             if escape == 0 {
-                buf[offset] = x;
-                offset += 1;
-            } else if escape == b'u' {
-                buf[offset] = b'\\';
-                offset += 1;
-                buf[offset] = b'u';
-                offset += 1;
-                buf[offset] = b'0';
-                offset += 1;
-                buf[offset] = b'0';
-                offset += 1;
-                buf[offset] = HEX[((x >> 4) & 0xf) as usize];
-                offset += 1;
-                buf[offset] = HEX[(x & 0xf) as usize];
-                offset += 1;
+                continue;
+            }
+            if start < i {
+                self.push_str(&val[start..i])?;
+            }
+            if escape == b'u' {
+                self.push_str("\\u00")?;
+                self.push(HEX[((x >> 4) & 0xf) as usize] as char)?;
+                self.push(HEX[(x & 0xf) as usize] as char)?;
             } else {
-                buf[offset] = b'\\';
-                offset += 1;
-                buf[offset] = escape;
-                offset += 1;
+                self.push('\\')?;
+                self.push(escape as char)?;
             }
+            start = i + 1;
         }
-        buf[offset] = b'"';
-        offset += 1;
-        match std::str::from_utf8(&buf[0..offset]) {
-            Ok(s) => {
-                self.push_str(s)?;
-            }
-            Err(err) => {
-                let error = format!(
-                    "\"UTF8-ERROR: what=[escaped string] error={} output={:02x?} input={:02x?}\"",
-                    err,
-                    &buf[0..offset],
-                    val.as_bytes(),
-                );
-                self.push_str(&error)?;
-            }
+        if start < bytes.len() {
+            self.push_str(&val[start..])?;
         }
+        self.push('"')?;
         Ok(())
     }
 

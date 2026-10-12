@@ -268,16 +268,6 @@ impl DCERPCUuidEntry {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct Uuid {
-    pub time_low: Vec<u8>,
-    pub time_mid: Vec<u8>,
-    pub time_hi_and_version: Vec<u8>,
-    pub clock_seq_hi_and_reserved: u8,
-    pub clock_seq_low: u8,
-    pub node: Vec<u8>,
-}
-
 #[derive(Debug)]
 pub struct DCERPCHdr {
     pub rpc_vers: u8,

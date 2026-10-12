@@ -210,7 +210,7 @@ fn dns_parse_answer<'a>(
                 // with empty data (data length = 0x0000)
                 if val.data.is_empty() && val.rrtype == DNSRecordType::OPT as u16 {
                     answers.push(DNSAnswerEntry {
-                        name: val.name.clone(),
+                        name: val.name,
                         rrtype: val.rrtype,
                         rrclass: val.rrclass,
                         ttl: val.ttl,
@@ -221,7 +221,7 @@ fn dns_parse_answer<'a>(
                 }
                 let (_, rdata) = dns_parse_rdata(val.data, message, val.rrtype, flags)?;
                 answers.push(DNSAnswerEntry {
-                    name: val.name.clone(),
+                    name: val.name,
                     rrtype: val.rrtype,
                     rrclass: val.rrclass,
                     ttl: val.ttl,
@@ -299,7 +299,7 @@ fn dns_parse_rdata_soa<'a>(
     let (i, minimum) = be_u32(i)?;
     Ok((
         i,
-        DNSRData::SOA(DNSRDataSOA {
+        DNSRData::SOA(Box::new(DNSRDataSOA {
             mname,
             rname,
             serial,
@@ -307,7 +307,7 @@ fn dns_parse_rdata_soa<'a>(
             retry,
             expire,
             minimum,
-        }),
+        })),
     ))
 }
 
@@ -906,7 +906,7 @@ mod tests {
         assert_eq!(authority.ttl, 899);
         assert_eq!(
             authority.data,
-            DNSRData::SOA(DNSRDataSOA {
+            DNSRData::SOA(Box::new(DNSRDataSOA {
                 mname: DNSName {
                     value: "ns-110.awsdns-13.com".as_bytes().to_vec(),
                     flags: DNSNameFlags::default()
@@ -920,7 +920,7 @@ mod tests {
                 retry: 900,
                 expire: 1209600,
                 minimum: 86400,
-            })
+            }))
         );
 
         // verify additional section

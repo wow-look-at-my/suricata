@@ -34,6 +34,7 @@
 #include "queue.h"
 
 #include "detect-engine.h"
+#include "detect-engine-address.h"
 #include "detect-engine-loader.h"
 #include "detect-engine-build.h"
 #include "detect-engine-analyzer.h"
@@ -524,6 +525,9 @@ skip_regular_rules:
     }
 
     DetectParseDupSigHashFree(de_ctx);
+    /* the address map is only used when parsing signatures, so it can
+     * be freed now that the engine is built */
+    DetectAddressMapFree(de_ctx);
     SCReturnInt(ret);
 }
 

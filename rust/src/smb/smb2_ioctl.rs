@@ -39,8 +39,8 @@ impl SMBState {
     pub fn new_ioctl_tx(&mut self, hdr: SMBCommonHdr, func: u32) -> Option<&mut SMBTransaction> {
         let mut tx = self.new_tx()?;
         tx.hdr = hdr;
-        tx.type_data = Some(SMBTransactionTypeData::IOCTL(SMBTransactionIoctl::new(
-            func,
+        tx.type_data = Some(Box::new(SMBTransactionTypeData::IOCTL(
+            SMBTransactionIoctl::new(func),
         )));
         tx.request_done = true;
         tx.response_done = self.tc_trunc; // no response expected if tc is truncated

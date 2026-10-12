@@ -614,6 +614,20 @@ static void SCACPrepareStateTable(MpmCtx *mpm_ctx)
 
     /* create the goto table */
     SCACCreateGotoTable(mpm_ctx);
+
+    /* all states exist now, so the goto and output tables can shrink from
+     * the doubling growth size to the exact state count before the delta
+     * table is allocated next to them */
+    if (ctx->allocated_state_count > ctx->state_count) {
+        void *ptmp = SCRealloc(ctx->goto_table, (size_t)ctx->state_count * ctx->single_state_size);
+        if (ptmp != NULL)
+            ctx->goto_table = ptmp;
+        ptmp = SCRealloc(ctx->output_table, (size_t)ctx->state_count * sizeof(SCACOutputTable));
+        if (ptmp != NULL)
+            ctx->output_table = ptmp;
+        ctx->allocated_state_count = ctx->state_count;
+    }
+
     /* create the failure table */
     SCACCreateFailureTable(mpm_ctx);
     /* create the final state(delta) table */
@@ -650,6 +664,10 @@ int SCACPreparePatterns(MpmConfig *mpm_conf, MpmCtx *mpm_ctx)
 
     if (mpm_ctx->pattern_cnt == 0 || mpm_ctx->init_hash == NULL) {
         SCLogDebug("no patterns supplied to this mpm_ctx");
+        /* no patterns can be added after prepare, so the init hash is
+         * no longer needed even if the ctx stays around */
+        SCFree(mpm_ctx->init_hash);
+        mpm_ctx->init_hash = NULL;
         return 0;
     }
 
@@ -862,7 +880,10 @@ uint32_t SCACSearch(const MpmCtx *mpm_ctx, MpmThreadCtx *mpm_thread_ctx,
     /* \todo Change it for stateful MPM.  Supply the state using mpm_thread_ctx */
     const SCACPatternList *pid_pat_list = ctx->pid_pat_list;
     uint8_t *bitarray = (uint8_t *)mpm_thread_ctx->ctx;
-    memset(bitarray, 0, mpm_thread_ctx->memory_size);
+    /* the thread bitarray is sized for the largest mpm ctx in the engine
+     * (PatternMatchThreadPrepare), but this search only ever touches bits
+     * for its own ctx's pattern ids, all below pattern_id_bitarray_size */
+    memset(bitarray, 0, ctx->pattern_id_bitarray_size);
 
     if (ctx->state_count < 32767) {
         register SC_AC_STATE_TYPE_U16 state = 0;

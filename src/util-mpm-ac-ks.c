@@ -743,6 +743,20 @@ static void SCACTilePrepareStateTable(MpmCtx *mpm_ctx)
 
     /* create the goto table */
     SCACTileCreateGotoTable(mpm_ctx);
+
+    /* all states exist now, so the goto and output tables can shrink from
+     * the doubling growth size to the exact state count before the delta
+     * table is allocated next to them */
+    if (ctx->allocated_state_count > ctx->state_count) {
+        void *ptmp = SCRealloc(ctx->goto_table, (size_t)ctx->state_count * sizeof(int32_t) * 256);
+        if (ptmp != NULL)
+            ctx->goto_table = ptmp;
+        ptmp = SCRealloc(ctx->output_table, (size_t)ctx->state_count * sizeof(SCACTileOutputTable));
+        if (ptmp != NULL)
+            ctx->output_table = ptmp;
+        ctx->allocated_state_count = ctx->state_count;
+    }
+
     /* create the failure table */
     SCACTileCreateFailureTable(mpm_ctx);
     /* create the final state(delta) table */
@@ -816,6 +830,10 @@ int SCACTilePreparePatterns(MpmConfig *mpm_conf, MpmCtx *mpm_ctx)
 
     if (mpm_ctx->pattern_cnt == 0 || search_ctx->init_ctx == NULL) {
         SCLogDebug("no patterns supplied to this mpm_ctx");
+        /* no patterns can be added after prepare, so the init hash is
+         * no longer needed even if the ctx stays around */
+        SCFree(mpm_ctx->init_hash);
+        mpm_ctx->init_hash = NULL;
         return 0;
     }
     SCACTileCtx *ctx = search_ctx->init_ctx;
@@ -1139,7 +1157,10 @@ uint32_t SCACTileSearchLarge(const SCACTileSearchCtx *ctx, MpmThreadCtx *mpm_thr
     int matches = 0;
 
     uint8_t *mpm_bitarray = (uint8_t *)mpm_thread_ctx->ctx;
-    memset(mpm_bitarray, 0, mpm_thread_ctx->memory_size);
+    /* the thread bitarray is sized for the largest mpm ctx in the engine,
+     * but this search only touches bits for its own ctx's pattern indexes,
+     * all below mpm_bitarray_size */
+    memset(mpm_bitarray, 0, ctx->mpm_bitarray_size);
 
     const uint8_t* restrict xlate = ctx->translate_table;
     register int state = 0;

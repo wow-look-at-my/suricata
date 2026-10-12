@@ -55,8 +55,8 @@ impl SMBState {
                 cmd as u16
             };
 
-            match tx.type_data {
-                Some(SMBTransactionTypeData::FILE(ref d)) => {
+            match tx.type_data.as_deref() {
+                Some(SMBTransactionTypeData::FILE(d)) => {
                     SCLogDebug!(
                         "idx {} tx id {} progress {}/{} filename {} type_data {:?}",
                         i,

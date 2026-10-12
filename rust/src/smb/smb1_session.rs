@@ -76,7 +76,7 @@ pub fn smb1_session_setup_request(state: &mut SMBState, r: &SmbRecord, andx_offs
             };
             tx.vercmd.set_smb1_cmd(r.command);
 
-            if let Some(SMBTransactionTypeData::SESSIONSETUP(ref mut td)) = tx.type_data {
+            if let Some(SMBTransactionTypeData::SESSIONSETUP(td)) = tx.type_data.as_deref_mut() {
                 td.request_host = Some(setup.request_host);
                 if let Some(s) = parse_secblob(setup.sec_blob) {
                     td.ntlmssp = s.ntlmssp;
@@ -98,7 +98,7 @@ pub fn smb1_session_setup_request(state: &mut SMBState, r: &SmbRecord, andx_offs
 fn smb1_session_setup_update_tx(tx: &mut SMBTransaction, r: &SmbRecord, andx_offset: usize) {
     match parse_smb_response_setup_andx_record(&r.data[andx_offset - SMB1_HEADER_SIZE..]) {
         Ok((rem, _setup)) => {
-            if let Some(SMBTransactionTypeData::SESSIONSETUP(ref mut td)) = tx.type_data {
+            if let Some(SMBTransactionTypeData::SESSIONSETUP(td)) = tx.type_data.as_deref_mut() {
                 td.response_host = Some(smb1_session_setup_response_host_info(r, rem));
             }
         }

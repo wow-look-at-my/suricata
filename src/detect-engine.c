@@ -2148,6 +2148,26 @@ uint8_t DetectEngineInspectGenericList(DetectEngineCtx *de_ctx, DetectEngineThre
     return DETECT_ENGINE_INSPECT_SIG_MATCH;
 }
 
+/** \internal
+ *  \brief get the tx to use for tx progress/EOF evaluation
+ *
+ *  Engines registered for ALPROTO_DOH2 are handed the DNS tx embedded in the
+ *  HTTP2 tx (see DetectGetInnerTx), but tx progress for the flow's alproto is
+ *  tracked on the outer HTTP2 tx. Passing the (smaller) DNS tx to the http2
+ *  progress callback is a type confusion leading to an out of bounds read, so
+ *  look the outer tx back up for the progress check.
+ *
+ *  \retval tx to query progress on, or NULL if it can't be found
+ */
+static void *DetectGetProgressTx(const DetectEngineAppInspectionEngine *engine, const Flow *f,
+        void *alstate, void *txv, const uint64_t tx_id)
+{
+    if (unlikely(f->alproto == ALPROTO_DOH2 && engine->alproto == ALPROTO_DOH2)) {
+        return AppLayerParserGetTx(f->proto, f->alproto, alstate, tx_id);
+    }
+    return txv;
+}
+
 /**
  * \brief Do the content inspection & validation for a signature
  *
@@ -2169,8 +2189,9 @@ uint8_t DetectEngineInspectBufferSingle(DetectEngineCtx *de_ctx, DetectEngineThr
     const int list_id = engine->sm_list;
     SCLogDebug("running inspect on %d", list_id);
 
-    const bool eof =
-            (AppLayerParserGetStateProgress(f->proto, f->alproto, txv, flags) > engine->progress);
+    void *ptx = DetectGetProgressTx(engine, f, alstate, txv, tx_id);
+    const bool eof = (ptx != NULL) && (AppLayerParserGetStateProgress(f->proto, f->alproto, ptx,
+                                               flags) > engine->progress);
 
     SCLogDebug("list %d mpm? %s transforms %p", engine->sm_list, engine->mpm ? "true" : "false",
             engine->v2.transforms);
@@ -2230,7 +2251,9 @@ uint8_t DetectEngineInspectBufferGeneric(DetectEngineCtx *de_ctx, DetectEngineTh
     const int list_id = engine->sm_list;
     SCLogDebug("running inspect on %d", list_id);
 
-    const bool eof = (AppLayerParserGetStateProgress(f->proto, f->alproto, txv, flags) > engine->progress);
+    void *ptx = DetectGetProgressTx(engine, f, alstate, txv, tx_id);
+    const bool eof = (ptx != NULL) && (AppLayerParserGetStateProgress(f->proto, f->alproto, ptx,
+                                               flags) > engine->progress);
 
     SCLogDebug("list %d mpm? %s transforms %p",
             engine->sm_list, engine->mpm ? "true" : "false", engine->v2.transforms);
@@ -2364,8 +2387,9 @@ uint8_t DetectEngineInspectMultiBufferGeneric(DetectEngineCtx *de_ctx,
     } while (1);
     if (local_id == 0) {
         // That means we did not get even one buffer value from the multi-buffer
-        const bool eof = (AppLayerParserGetStateProgress(f->proto, f->alproto, txv, flags) >
-                          engine->progress);
+        void *ptx = DetectGetProgressTx(engine, f, alstate, txv, tx_id);
+        const bool eof = (ptx != NULL) && (AppLayerParserGetStateProgress(f->proto, f->alproto, ptx,
+                                                   flags) > engine->progress);
         if (eof && engine->match_on_null) {
             return DETECT_ENGINE_INSPECT_SIG_MATCH;
         }
@@ -5253,6 +5277,27 @@ void DetectEngineUnsetParseMetadata(void)
 int DetectEngineMustParseMetadata(void)
 {
     return g_parse_metadata;
+}
+
+/** set by an output that needs the original rule text at runtime */
+static int g_keep_sig_str = 0;
+/** set once all outputs are initialized before the engine is set up, so
+ *  it is known whether any output registered a need for the rule text */
+static int g_sig_str_free_enabled = 0;
+
+void DetectEngineSetKeepSigStr(void)
+{
+    g_keep_sig_str = 1;
+}
+
+void DetectEngineEnableSigStrFree(void)
+{
+    g_sig_str_free_enabled = 1;
+}
+
+int DetectEngineCanFreeSigStr(void)
+{
+    return g_sig_str_free_enabled && !g_keep_sig_str;
 }
 
 const char *DetectSigmatchListEnumToString(enum DetectSigmatchListEnum type)

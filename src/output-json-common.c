@@ -33,26 +33,18 @@ OutputJsonThreadCtx *CreateEveThreadCtx(ThreadVars *t, OutputJsonCtx *ctx)
         return NULL;
     }
 
-    thread->buffer = MemBufferCreateNew(JSON_OUTPUT_BUFFER_SIZE);
-    if (unlikely(thread->buffer == NULL)) {
-        goto error;
-    }
+    /* thread->buffer is allocated lazily on the first record that is
+     * logged, so idle loggers don't hold an output buffer. */
 
     thread->file_ctx = LogFileEnsureExists(t->id, ctx->file_ctx);
     if (!thread->file_ctx) {
-        goto error;
+        SCFree(thread);
+        return NULL;
     }
 
     thread->ctx = ctx;
 
     return thread;
-
-error:
-    if (thread->buffer) {
-        MemBufferFree(thread->buffer);
-    }
-    SCFree(thread);
-    return NULL;
 }
 
 void FreeEveThreadCtx(OutputJsonThreadCtx *ctx)
@@ -98,26 +90,18 @@ TmEcode JsonLogThreadInit(ThreadVars *t, const void *initdata, void **data)
         return TM_ECODE_FAILED;
     }
 
-    thread->buffer = MemBufferCreateNew(JSON_OUTPUT_BUFFER_SIZE);
-    if (unlikely(thread->buffer == NULL)) {
-        goto error_exit;
-    }
+    /* thread->buffer is allocated lazily on the first record that is
+     * logged, so idle loggers don't hold an output buffer. */
 
     thread->ctx = ((OutputCtx *)initdata)->data;
     thread->file_ctx = LogFileEnsureExists(t->id, thread->ctx->file_ctx);
     if (!thread->file_ctx) {
-        goto error_exit;
+        SCFree(thread);
+        return TM_ECODE_FAILED;
     }
 
     *data = (void *)thread;
     return TM_ECODE_OK;
-
-error_exit:
-    if (thread->buffer) {
-        MemBufferFree(thread->buffer);
-    }
-    SCFree(thread);
-    return TM_ECODE_FAILED;
 }
 
 TmEcode JsonLogThreadDeinit(ThreadVars *t, void *data)

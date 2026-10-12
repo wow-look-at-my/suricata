@@ -121,20 +121,13 @@ pub struct Header {
 }
 
 /// Table of request or response headers.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Headers {
     /// Entries in the table.
     pub elements: Vec<Header>,
 }
 
 impl Headers {
-    /// Make a new owned Headers Table with given capacity
-    pub(crate) fn with_capacity(size: usize) -> Self {
-        Self {
-            elements: Vec::with_capacity(size),
-        }
-    }
-
     /// Search the Headers table for the first tuple with a tuple key matching the given slice, ignoring ascii case and any zeros in self
     ///
     /// Returns None if no match is found.
@@ -633,7 +626,7 @@ impl Transaction {
             partial_normalized_uri: None,
             request_message_len: 0,
             request_entity_len: 0,
-            request_headers: Headers::with_capacity(32),
+            request_headers: Headers::default(),
             request_transfer_coding: HtpTransferCoding::Unknown,
             request_content_encoding: HtpContentEncoding::None,
             request_content_encoding_processing: HtpContentEncoding::None,
@@ -657,7 +650,7 @@ impl Transaction {
             response_status_expected_number: HtpUnwanted::Ignore,
             response_message: None,
             seen_100continue: false,
-            response_headers: Headers::with_capacity(32),
+            response_headers: Headers::default(),
             is_http_2_upgrade: false,
             response_message_len: 0,
             response_entity_len: 0,
@@ -971,7 +964,7 @@ impl PartialEq for Transaction {
 
 #[test]
 fn GetNocaseNozero() {
-    let mut t = Headers::with_capacity(2);
+    let mut t = Headers::default();
     let v1 = Bstr::from("Value1");
     let mut k = Bstr::from("K\x00\x00\x00\x00ey\x001");
     let mut h = Header::new(k, v1.clone());

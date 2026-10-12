@@ -1542,8 +1542,8 @@ host-os-policy:
 defrag:
   memcap: 32 MiB
   # memcap-policy: ignore
-  hash-size: 65536
-  trackers: 65535 # number of defragmented flows to follow
+  hash-size: 8192
+  trackers: 4096 # number of defragmented flows to follow
   max-frags: 65535 # number of fragments to keep (higher than trackers)
   prealloc: yes
   timeout: 60
@@ -1682,7 +1682,7 @@ flow-timeouts:
 #                               # of checksum. You can control the handling of checksum
 #                               # on a per-interface basis via the 'checksum-checks'
 #                               # option
-#   prealloc-sessions: 2048     # 2k sessions prealloc'd per stream thread
+#   prealloc-sessions: 512      # sessions prealloc'd per stream thread
 #   midstream: false            # don't allow midstream session pickups
 #   midstream-policy: ignore    # The exception policy value can be "drop-flow",
 #                               # "pass-flow", "bypass", "drop-packet",
@@ -1726,7 +1726,7 @@ flow-timeouts:
 #                               # raw is for content inspection by detection
 #                               # engine.
 #
-#     segment-prealloc: 2048    # number of segments preallocated per thread
+#     segment-prealloc: 512     # number of segments preallocated per thread
 #
 #     check-overlap-different-data: true|false
 #                               # check if a segment contains different data
@@ -1758,7 +1758,7 @@ stream:
     randomize-chunk-size: yes
     #randomize-chunk-range: 10
     #raw: yes
-    #segment-prealloc: 2048
+    #segment-prealloc: 512
     #check-overlap-different-data: true
 
 # Host table:
@@ -1881,7 +1881,7 @@ detect:
 
   # Thresholding hash table settings.
   thresholds:
-    hash-size: 16384
+    hash-size: 4096
     memcap: 16 MiB
 
   profiling:

@@ -1663,6 +1663,32 @@ end:
 }
 
 /**
+ * \brief Frees the sid arrays of all MpmStores in the mpm hash table.
+ *
+ *        The sid arrays are only used to dedup the stores while the
+ *        rule groups are set up, so they can be freed once the engine
+ *        is fully built.
+ *
+ * \param de_ctx Pointer to the detection engine context.
+ */
+void MpmStoreFreeSidArrays(DetectEngineCtx *de_ctx)
+{
+    if (de_ctx->mpm_hash_table == NULL)
+        return;
+
+    for (HashListTableBucket *htb = HashListTableGetListHead(de_ctx->mpm_hash_table); htb != NULL;
+            htb = HashListTableGetListNext(htb)) {
+        MpmStore *ms = (MpmStore *)HashListTableGetListData(htb);
+        if (ms == NULL) {
+            continue;
+        }
+        SCFree(ms->sid_array);
+        ms->sid_array = NULL;
+        ms->sid_array_size = 0;
+    }
+}
+
+/**
  * \brief Frees the hash table - DetectEngineCtx->mpm_hash_table, allocated by
  *        MpmStoreInit() function.
  *

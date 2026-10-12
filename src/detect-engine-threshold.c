@@ -362,7 +362,7 @@ static int ThresholdsInit(struct Thresholds *t)
 
     t->thash = THashInit("thresholds", sizeof(ThresholdEntry), ThresholdEntrySet,
             ThresholdEntryFree, ThresholdEntryHash, ThresholdEntryCompare, ThresholdEntryExpire,
-            NULL, 0, memcap, hashsize);
+            NULL, 0, memcap, hashsize, 0);
     if (t->thash == NULL) {
         SCLogError("failed to initialize thresholds hash table");
         return -1;

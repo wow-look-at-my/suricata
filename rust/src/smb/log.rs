@@ -176,8 +176,8 @@ fn smb_common_header(
 
     debug_add_progress(jsb, tx)?;
 
-    match tx.type_data {
-        Some(SMBTransactionTypeData::SESSIONSETUP(ref x)) => {
+    match tx.type_data.as_deref() {
+        Some(SMBTransactionTypeData::SESSIONSETUP(x)) => {
             if flags != SMB_LOG_DEFAULT_ALL && (flags & SMB_LOG_TYPE_SESSIONSETUP) == 0 {
                 return Err(SmbLogError::SkippedByConf);
             }
@@ -227,7 +227,7 @@ fn smb_common_header(
                 jsb.close()?;
             }
         }
-        Some(SMBTransactionTypeData::CREATE(ref x)) => {
+        Some(SMBTransactionTypeData::CREATE(x)) => {
             if flags != SMB_LOG_DEFAULT_ALL && (flags & SMB_LOG_TYPE_CREATE) == 0 {
                 return Err(SmbLogError::SkippedByConf);
             }
@@ -283,7 +283,7 @@ fn smb_common_header(
             let gs = fuid_to_string(&x.guid);
             jsb.set_string("fuid", &gs)?;
         }
-        Some(SMBTransactionTypeData::NEGOTIATE(ref x)) => {
+        Some(SMBTransactionTypeData::NEGOTIATE(x)) => {
             if flags != SMB_LOG_DEFAULT_ALL && (flags & SMB_LOG_TYPE_NEGOTIATE) == 0 {
                 return Err(SmbLogError::SkippedByConf);
             }
@@ -316,7 +316,7 @@ fn smb_common_header(
                 jsb.set_uint("max_write_size", state.max_write_size)?;
             }
         }
-        Some(SMBTransactionTypeData::TREECONNECT(ref x)) => {
+        Some(SMBTransactionTypeData::TREECONNECT(x)) => {
             if flags != SMB_LOG_DEFAULT_ALL && (flags & SMB_LOG_TYPE_TREECONNECT) == 0 {
                 return Err(SmbLogError::SkippedByConf);
             }
@@ -359,7 +359,7 @@ fn smb_common_header(
                 }
             }
         }
-        Some(SMBTransactionTypeData::FILE(ref x)) => {
+        Some(SMBTransactionTypeData::FILE(x)) => {
             if flags != SMB_LOG_DEFAULT_ALL && (flags & SMB_LOG_TYPE_FILE) == 0 {
                 return Err(SmbLogError::SkippedByConf);
             }
@@ -370,7 +370,7 @@ fn smb_common_header(
             let gs = fuid_to_string(&x.fuid);
             jsb.set_string("fuid", &gs)?;
         }
-        Some(SMBTransactionTypeData::RENAME(ref x)) => {
+        Some(SMBTransactionTypeData::RENAME(x)) => {
             if flags != SMB_LOG_DEFAULT_ALL && (flags & SMB_LOG_TYPE_RENAME) == 0 {
                 return Err(SmbLogError::SkippedByConf);
             }
@@ -390,7 +390,7 @@ fn smb_common_header(
             let gs = fuid_to_string(&x.fuid);
             jsb.set_string("fuid", &gs)?;
         }
-        Some(SMBTransactionTypeData::DCERPC(ref x)) => {
+        Some(SMBTransactionTypeData::DCERPC(x)) => {
             if flags != SMB_LOG_DEFAULT_ALL && (flags & SMB_LOG_TYPE_DCERPC) == 0 {
                 return Err(SmbLogError::SkippedByConf);
             }
@@ -480,13 +480,13 @@ fn smb_common_header(
             jsb.set_uint("call_id", x.call_id as u64)?;
             jsb.close()?;
         }
-        Some(SMBTransactionTypeData::IOCTL(ref x)) => {
+        Some(SMBTransactionTypeData::IOCTL(x)) => {
             if flags != SMB_LOG_DEFAULT_ALL && (flags & SMB_LOG_TYPE_IOCTL) == 0 {
                 return Err(SmbLogError::SkippedByConf);
             }
             jsb.set_string("function", &fsctl_func_to_string(x.func))?;
         }
-        Some(SMBTransactionTypeData::SETFILEPATHINFO(ref x)) => {
+        Some(SMBTransactionTypeData::SETFILEPATHINFO(x)) => {
             if flags != SMB_LOG_DEFAULT_ALL && (flags & SMB_LOG_TYPE_SETFILEPATHINFO) == 0 {
                 return Err(SmbLogError::SkippedByConf);
             }
