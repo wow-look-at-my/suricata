@@ -19,7 +19,7 @@ concurrency:
 jobs:
   scan-build:
     name: Scan-build
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-26.04:latest
       credentials:
@@ -130,7 +130,7 @@ jobs:
           retention-days: 5
   gcc-analyzer:
     name: GCC analyzer
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-26.04:latest
       credentials:

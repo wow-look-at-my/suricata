@@ -7,7 +7,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER || 'ubuntu-latest' }}
     steps:
     - uses: actions/checkout@v7.0.0
     - uses: cachix/install-nix-action@v31
