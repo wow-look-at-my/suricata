@@ -16,7 +16,7 @@ jobs:
 
   check-commits:
     name: Commit Check
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container: ubuntu:20.04
     steps:
       - name: Caching ~/.cargo

@@ -14,7 +14,7 @@ concurrency:
 permissions: read-all
 jobs:
  Fuzzing:
-   runs-on: ubuntu-latest
+   runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER || 'ubuntu-latest' }}
    strategy:
      fail-fast: false
      matrix:
