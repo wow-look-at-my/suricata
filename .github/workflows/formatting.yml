@@ -28,7 +28,7 @@ jobs:
   # Checking for correct formatting of branch for C code changes
   check-formatting:
     name: Formatting Check (clang 17)
-    runs-on: ${{ vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
       credentials:
