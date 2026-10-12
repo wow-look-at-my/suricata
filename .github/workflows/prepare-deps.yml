@@ -9,7 +9,7 @@ jobs:
 
   prepare-deps:
     name: Prepare dependencies
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER || 'ubuntu-latest' }}
     steps:
       - name: Dumping github context for debugging
         run: echo $JSON
