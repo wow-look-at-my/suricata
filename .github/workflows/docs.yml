@@ -34,7 +34,7 @@ jobs:
 
   prepare-cbindgen:
     name: Prepare cbindgen
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     steps:
       - name: Cache ~/.cargo
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -58,7 +58,7 @@ jobs:
 
   ubuntu-22-04-dist:
     name: Ubuntu 22.04 Dist Builder
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container: ubuntu:22.04
     needs: [prepare-deps, prepare-cbindgen]
     steps:

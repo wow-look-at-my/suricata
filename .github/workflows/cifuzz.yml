@@ -14,7 +14,7 @@ concurrency:
 permissions: read-all
 jobs:
  Fuzzing:
-   runs-on: ubuntu-latest
+   runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
    strategy:
      fail-fast: false
      matrix:
