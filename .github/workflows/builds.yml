@@ -45,7 +45,7 @@ jobs:
 
   prepare-cbindgen:
     name: Prepare cbindgen
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER || 'ubuntu-latest' }}
     steps:
       - name: Cache ~/.cargo
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -69,7 +69,7 @@ jobs:
 
   almalinux-10:
     name: AlmaLinux 10 (schema, plugins)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-10:latest
       credentials:
@@ -213,7 +213,7 @@ jobs:
 
   almalinux-9:
     name: AlmaLinux 9 (schema, rust-checks)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
       credentials:
@@ -368,7 +368,7 @@ jobs:
 
   almalinux-9-templates:
     name: AlmaLinux 9 Test Templates
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
       credentials:
@@ -420,7 +420,7 @@ jobs:
 
   rpms:
     name: Build RPMs
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container: ${{ matrix.container }}
     needs: [ubuntu-22-04-dist]
     strategy:
@@ -494,7 +494,7 @@ jobs:
 
   almalinux-8:
     name: AlmaLinux 8
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-8:latest
       credentials:
@@ -546,7 +546,7 @@ jobs:
 
   centos-stream9:
     name: CentOS Stream 9
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-centos-stream9:latest
       credentials:
@@ -610,7 +610,7 @@ jobs:
 
   fedora-44-sv-codecov:
     name: Fedora 44 (Suricata Verify codecov)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-fedora-44:latest
       credentials:
@@ -672,7 +672,7 @@ jobs:
   # Fedora build using Clang.
   fedora-44-clang:
     name: Fedora 44 (clang, debug, asan, wshadow, rust-strict, systemd)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-fedora-44:latest
       credentials:
@@ -736,7 +736,7 @@ jobs:
   # Fedora build using GCC.
   fedora-44-gcc:
     name: Fedora 44 (gcc, debug, flto, asan, wshadow, rust-strict)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-fedora-44:latest
       credentials:
@@ -800,7 +800,7 @@ jobs:
   # the absence of these features
   fedora-non-root:
     name: Fedora 44 (non-root, debug, clang, asan, wshadow, rust-strict, no-ja)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-fedora-44:latest
       credentials:
@@ -862,7 +862,7 @@ jobs:
   # Test that ./configure fails out if libjansson is not available.
   almalinux-9-no-jansson:
     name: AlmaLinux 9 (no jansson)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container: almalinux:9
     needs: [prepare-deps]
     steps:
@@ -929,7 +929,7 @@ jobs:
 
   almalinux-9-minimal-recommended-dependecies:
     name: AlmaLinux 9 (Minimal/Recommended Build)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container: almalinux:9
     needs: [ubuntu-22-04-dist]
     steps:
@@ -967,7 +967,7 @@ jobs:
 
   ubuntu-24-04:
     name: Ubuntu 24.04 (cocci)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
       credentials:
@@ -1011,7 +1011,7 @@ jobs:
 
   ubuntu-24-04-rust-vars:
     name: Ubuntu 24.04 (RUSTC+CARGO vars)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
       credentials:
@@ -1053,7 +1053,7 @@ jobs:
 
   ubuntu-24-04-cov-ut:
     name: Ubuntu 24.04 (unittests coverage)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
       credentials:
@@ -1177,7 +1177,7 @@ jobs:
 
   ubuntu-24-04-cov-pcapunix:
     name: Ubuntu 24.04 (unix socket mode coverage)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
       credentials:
@@ -1245,7 +1245,7 @@ jobs:
 
   ubuntu-24-04-cov-afpdpdk:
     name: Ubuntu 24.04 (afpacket and dpdk coverage)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
       credentials:
@@ -1351,7 +1351,7 @@ jobs:
 
   ubuntu-24-04-pcap-unix:
     name: Ubuntu 24.04 (pcap unix socket ASAN)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
       credentials:
@@ -1393,7 +1393,7 @@ jobs:
 
   ubuntu-latest-namespace-ips:
     name: Ubuntu 24.04 (afpacket IPS tests in namespaces)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     needs: [prepare-deps, prepare-cbindgen]
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
@@ -1501,7 +1501,7 @@ jobs:
 
   ubuntu-24-04-asan-afpdpdk:
     name: Ubuntu 24.04 (afpacket and dpdk live tests with ASAN)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
       credentials:
@@ -1562,7 +1562,7 @@ jobs:
 
   ubuntu-24-04-cov-fuzz:
     name: Ubuntu 24.04 (fuzz corpus coverage)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-24.04:latest
       credentials:
@@ -1627,7 +1627,7 @@ jobs:
 
   ubuntu-20-04-ndebug:
     name: Ubuntu 20.04 (-DNDEBUG)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-20.04:latest
       credentials:
@@ -1679,7 +1679,7 @@ jobs:
 
   ubuntu-20-04-too-old-rust:
     name: Ubuntu 20.04 (unsupported rust)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-20.04:latest
       credentials:
@@ -1712,7 +1712,7 @@ jobs:
 
   ubuntu-22-04-debug-validation:
     name: Ubuntu 22.04 (Debug Validation)
-    runs-on: ubuntu-22.04
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-22.04' || vars.CI_RUNNER_DIND || 'ubuntu-22.04' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-22.04:latest
       credentials:
@@ -1761,7 +1761,7 @@ jobs:
   # test build with afl and fuzztargets
   ubuntu-22-04-fuzz:
     name: Ubuntu 22.04 (Fuzz)
-    runs-on: ubuntu-22.04
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-22.04' || vars.CI_RUNNER_DIND || 'ubuntu-22.04' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-22.04:latest
       credentials:
@@ -1795,7 +1795,7 @@ jobs:
   ubuntu-22-04-netmap-build:
     name: Ubuntu 22.04 (Netmap build)
     needs: [prepare-deps, prepare-cbindgen]
-    runs-on: ubuntu-22.04
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-22.04' || vars.CI_RUNNER || 'ubuntu-22.04' }}
     steps:
       - name: Restore Cache Netmap
         uses: actions/cache/restore@v6
@@ -1893,7 +1893,7 @@ jobs:
   ubuntu-22-04-minimal-recommended-build:
     name: Ubuntu 22.04 (Minimal/Recommended Build)
     needs: [ubuntu-22-04-dist]
-    runs-on: ubuntu-22.04
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-22.04' || vars.CI_RUNNER_DIND || 'ubuntu-22.04' }}
     container: ubuntu:22.04
     steps:
       # Cache Rust stuff.
@@ -1924,7 +1924,7 @@ jobs:
 
   ubuntu-22-04-dpdk-build:
     name: Ubuntu 22.04 (DPDK Build)
-    runs-on: ubuntu-22.04
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-22.04' || vars.CI_RUNNER_DIND || 'ubuntu-22.04' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-22.04:latest
       credentials:
@@ -1981,7 +1981,7 @@ jobs:
 
   debian-12:
     name: Debian 12 (xdp)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-debian-12:latest
       credentials:
@@ -2032,7 +2032,7 @@ jobs:
 
   debian-13:
     name: Debian 13 (xdp)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-debian-13:latest
       credentials:
@@ -2082,7 +2082,7 @@ jobs:
 
   ubuntu-22-04-dist:
     name: Ubuntu 22.04 Dist Builder
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-ubuntu-22.04:latest
       credentials:
@@ -2125,7 +2125,7 @@ jobs:
 
   debian-12-msrv:
     name: Debian 12 MSRV
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-debian-12:latest
       credentials:
@@ -2170,7 +2170,7 @@ jobs:
 
   debian-11:
     name: Debian 11
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-debian-11:latest
       credentials:
@@ -2272,7 +2272,7 @@ jobs:
 
   freebsd-15-0:
     name: FreeBSD 15.0
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER || 'ubuntu-latest' }}
     needs: [prepare-deps]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -2528,7 +2528,7 @@ jobs:
 
   pf-ring:
     name: PF_RING
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     container:
       image: ghcr.io/wow-look-at-my/suricata-ci-almalinux-9:latest
       credentials:

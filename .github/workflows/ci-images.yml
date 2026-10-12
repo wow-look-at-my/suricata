@@ -45,7 +45,7 @@ permissions:
 jobs:
   build-and-push:
     name: ${{ matrix.image }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER_DIND || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
